@@ -1,0 +1,198 @@
+.jsoner .tab-content {
+    margin: 15px;
+}
+
+.jsoner  > .tab-content section {
+    padding: 15px;
+    margin: 5px;
+    min-height: 100px;
+    width: 40%;
+    float: left;
+    border: dashed 1px gray;
+}
+
+.btn {
+    background: #3498db;
+    background-image: -webkit-linear-gradient(top, #3498db, #2980b9);
+    background-image: -moz-linear-gradient(top, #3498db, #2980b9);
+    background-image: -ms-linear-gradient(top, #3498db, #2980b9);
+    background-image: -o-linear-gradient(top, #3498db, #2980b9);
+    background-image: linear-gradient(to bottom, #3498db, #2980b9);
+    -webkit-border-radius: 8;
+    -moz-border-radius: 8;
+    border-radius: 8px;
+    font-family: Arial;
+    color: #ffffff;
+    /*font-size: 10px;*/
+    padding: 5px 10px 5px 10px;
+    text-decoration: none;
+}
+
+.btn:hover {
+    background: #3cb0fd;
+    background-image: -webkit-linear-gradient(top, #3cb0fd, #3498db);
+    background-image: -moz-linear-gradient(top, #3cb0fd, #3498db);
+    background-image: -ms-linear-gradient(top, #3cb0fd, #3498db);
+    background-image: -o-linear-gradient(top, #3cb0fd, #3498db);
+    background-image: linear-gradient(to bottom, #3cb0fd, #3498db);
+    text-decoration: none;
+}
+
+#accordion {
+    width: 70% !important;
+}
+
+#accordion > .active .ui-state-active {
+    background: #00a32a url("../images/ui-bg_glass_65_ffffff_1x400.png") 50% 50% repeat-x !important;
+}
+
+#accordion > .active {
+    background: #00ba37;
+}
+
+.clearfix {
+    clear: both;
+}
+
+.wait {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: -21px;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    color: transparent;
+    background-color: transparent;
+}
+
+.wait .mask {
+    color: rgba(0,0,0,.3);
+    background-color: rgba(0,0,0,.3);
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.progressbar-container {
+    margin: 0 auto;
+    padding: 0;
+    display: block;
+    position: absolute;
+    top: 33%;
+    left: 10%;
+    width: 70%;
+}
+
+#progressbar .ui-progressbar-value {
+    background-color: #00a0d2;
+    color: #0d66c2;
+}
+
+.wait .loader {
+    border: 16px solid #f3f3f3; /* Light grey */
+    border-top: 16px solid #ffdd00;; /* Blue */
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    animation: spin 2s linear infinite;
+
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 999;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Tooltip container */
+.help-tip{
+    position: relative;
+    display: inline-block;
+    text-align: center;
+    background-color: #BCDBEA;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    line-height: 20px;
+    cursor: default;
+    margin-left: 20px;
+    border: solid #5986f6 0.5px;
+}
+
+.help-tip:before{
+    content:'?';
+    font-weight: bold;
+    color: #333;
+}
+
+.help-tip:hover p{
+    display:block;
+    transform-origin: 100% 0%;
+
+    -webkit-animation: fadeIn 0.3s ease-in-out;
+    animation: fadeIn 0.3s ease-in-out;
+
+}
+
+.help-tip p{    /* The tooltip */
+    display: none;
+    text-align: left;
+    background-color: #1E2021;
+    padding: 20px;
+    width: 300px;
+    position: absolute;
+    border-radius: 3px;
+    box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+    right: -4px;
+    color: #FFF;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.help-tip p:before{ /* The pointer of the tooltip */
+    position: absolute;
+    content: '';
+    width:0;
+    height: 0;
+    border:6px solid transparent;
+    border-bottom-color:#1E2021;
+    right:10px;
+    top:-12px;
+}
+
+.help-tip p:after{ /* Prevents the tooltip from being hidden */
+    width:100%;
+    height:40px;
+    content:'';
+    position: absolute;
+    top:-40px;
+    left:0;
+}
+
+/* CSS animation */
+
+@-webkit-keyframes fadeIn {
+    0% {
+        opacity:0;
+        transform: scale(0.6);
+    }
+
+    100% {
+        opacity:100%;
+        transform: scale(1);
+    }
+}
+
+@keyframes fadeIn {
+    0% { opacity:0; }
+    100% { opacity:100%; }
+}

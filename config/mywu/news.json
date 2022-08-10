@@ -1,0 +1,28 @@
+{
+  "ID": "post.ID",
+  "author": "post.post_author",
+  "cta": "customs.cta",
+  "date": "post.post_date",
+  "date_gmt": "post.post_date_gmt",
+  "description": "customs.description",
+  "filter": "post.filter",
+  "id": "post.ID",
+  "image": {
+    "href": "customs.image.href",
+    "height": "customs.image.height",
+    "width": "customs.image.width"
+  },
+  "is_youtube": "customs.is_youtube",
+  "link_url": "customs.link_url",
+  "modified": "post.post_modified",
+  "modified_gmt": "post.post_modified_gmt",
+  "name": "post.post_name",
+  "show_logged_in": "customs.show_logged_in",
+  "show_logged_out": "customs.show_logged_out",
+  "status": "post.post_status",
+  "title": "post.post_title",
+  "tooltip": "customs.tooltip",
+  "type": "post.post_type",
+  "video_url": "customs.video_url",
+  "order_id": "post.menu_order"
+}
