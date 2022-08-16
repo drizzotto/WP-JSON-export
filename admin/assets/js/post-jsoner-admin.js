@@ -88,6 +88,7 @@ jQuery(document).ready(function ($) {
                     showHideTransition: 'slide',
                     icon: 'error'
                 });
+                $('.wait').hide();
             })
             .always(function (response) {
                 if (response['next'] === -1) {
@@ -148,6 +149,7 @@ jQuery(document).ready(function ($) {
                     showHideTransition: 'slide',
                     icon: 'error'
                 });
+                $('.wait').hide();
             })
             .always(function () {
                 $('.wait').hide();

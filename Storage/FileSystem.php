@@ -36,8 +36,6 @@ class FileSystem
     {
         try {
             $filename = $this->getOrCreateFilename($country, $lang, $type);
-            $msg = "country: $country\nlang: $lang\ntype: $type\nfilename: $filename\n\n===========\n\n";
-            \error_log("\n\nsaveToJSON:\n".$msg,3,'/tmp/wp-errors.log');
             $out = $this->save($filename, json_encode($data));
         } catch (Exception $e) {
             error_log($e->getMessage());

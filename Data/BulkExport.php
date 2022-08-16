@@ -34,7 +34,7 @@ class BulkExport
                     try {
                         $s3->uploadDirectory($source, $target);
                     } catch (\Exception $e) {
-                        error_log($e->getMessage(), 3, '/tmp/wp-errors.log');
+                        error_log("BulkExport::exportSite: S3 upload Exception: ".$e->getMessage()."\n", 3, '/tmp/wp-errors.log');
                     }
                 }
             }
@@ -54,8 +54,6 @@ class BulkExport
         string     $lang = ''
     ): void
     {
-//        \error_log("here: " . $country . " - " . $lang);
-
         if (!empty($lang)) {
             global $sitepress;
             if (!empty($sitepress)) {
@@ -115,7 +113,9 @@ class BulkExport
                                 'element_id'))) {
                         continue;
                     }
-                    $filteredPosts[] = get_post($translation[$lang]->element_id);
+                    if (!empty($translation[$lang])) {
+                        $filteredPosts[] = get_post($translation[$lang]->element_id);
+                    }
                 }
             }
         }
@@ -192,7 +192,6 @@ class BulkExport
                 continue;
             }
             $elements = self::getPosts($post_type, $_lang);
-//            \error_log("saveElement::posts: ".var_export($elements,1)."\n\n--------\n\n",3,'/tmp/wp-errors.log');
             if (!empty($elements)) {
                 $filesystem->saveToJson($siteName, $_lang, $elements, $post_type);
             }

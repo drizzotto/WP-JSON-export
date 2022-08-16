@@ -53,10 +53,10 @@ class S3Wrapper
     {
         try {
             $env = empty($this->environment) ? 'stage' : $this->environment;
-            error_log("EV: ".var_export($env,1)."\n",3,'/var/log/wp_error.log');
+            error_log("EV: ".var_export($env,1)."\n",3,'/tmp/wp-errors.log');
 //            $keySrc = $env . $targetPath;
             $keySrc = \Post_Jsoner_S3_Config::getPathValue($this->environment) . $targetPath;
-            error_log("KS: {$keySrc}\n",3,'/var/log/wp_error.log');
+            error_log("KS: {$keySrc}\n",3,'/tmp/wp-errors.log');
 
 
             $args = [
@@ -64,14 +64,14 @@ class S3Wrapper
                 'Key' => $keySrc,
                 'SourceFile' => $filename,
             ];
-            error_log("FN: {$filename}\n",3,'/var/log/wp_error.log');
-            error_log("TP: {$targetPath}\n",3,'/var/log/wp_error.log');
-            error_log("AR: ".var_export($args,1)."\n",3,'/var/log/wp_error.log');
+            error_log("FN: {$filename}\n",3,'/tmp/wp-errors.log');
+            error_log("TP: {$targetPath}\n",3,'/tmp/wp-errors.log');
+            error_log("AR: ".var_export($args,1)."\n",3,'/tmp/wp-errors.log');
 
             $result = $this->client->putObject($args);
-            error_log(var_export($result,1),3,'/var/log/wp_error.log');
+            error_log(var_export($result,1),3,'/tmp/wp-errors.log');
         } catch (S3Exception $e) {
-            error_log($e->getMessage(),3,'/var/log/wp_error.log');
+            error_log($e->getMessage(),3,'/tmp/wp-errors.log');
         }
     }
 
@@ -85,7 +85,7 @@ class S3Wrapper
             $keySrc = \Post_Jsoner_S3_Config::getPathValue($this->environment) . $target;
             $this->client->uploadDirectory($source, $this->bucket, $keySrc);
         } catch (\Exception $e) {
-            error_log($e->getMessage(),3,'/var/log/wp_error.log');
+            error_log("uploadDirectory: ". $e->getMessage(),3,'/tmp/wp-errors.log');
         }
     }
 
@@ -127,7 +127,7 @@ class S3Wrapper
     {
         try {
             $s3Client = new S3Wrapper(WP_SITE_ENV);
-            $buckets = $s3Client->listBuckets();
+            $buckets = $s3Client->client->listBuckets();
             unset($s3Client);
             return !empty($buckets);
         }

@@ -76,36 +76,6 @@ class Post_Jsoner_Settings_Fields
                 'sections' => []
             ]
         ],
-//        'post_jsoner_s3_bucket' => [
-//            'title' => 'S3 Bucket',
-//            'args' => [
-//                'type' => 'input',
-//                'subtype' => 'text',
-//                'id' => 'post_jsoner_s3_bucket',
-//                'name' => 'post_jsoner_s3_bucket',
-//                'required' => 'false',
-//                'get_options_list' => '',
-//                'value' => S3_WP_BUCKET,
-//                'value_type' => 'normal',
-//                'wp_data' => 'option',
-//                'is_s3' => '1',
-//            ]
-//        ],
-//        'post_jsoner_s3_enabled' => [
-//            'title' => 'Is S3 Enabled?',
-//            'args' => [
-//                'type' => 'input',
-//                'subtype' => 'checkbox',
-//                'id' => 'post_jsoner_s3_enabled',
-//                'name' => 'post_jsoner_s3_enabled',
-//                'required' => 'false',
-//                'get_options_list' => '',
-//                'value' => JSONER_S3_ENABLED,
-//                'value_type' => 'normal',
-//                'wp_data' => 'option',
-//                'is_s3' => '1',
-//            ]
-//        ],
     ];
 
     public function __construct()
@@ -130,7 +100,7 @@ class Post_Jsoner_Settings_Fields
             }
             add_settings_field(
                 $key,
-                $definitions['title'],
+                $definitions['title'] ?? "",
                 [$this, 'post_jsoner_render_settings_field'],
                 'post_jsoner_general_settings',
                 'post_jsoner_general_section',
@@ -265,7 +235,6 @@ class Post_Jsoner_Settings_Fields
             echo '<div>';
             foreach ($section as $field) {
                 $value = $fieldVal[$field['id']];
-//                echo '<pre>'.json_encode($field).'</pre>';
                 echo '<div class="row">';
                 echo '<label for="'.$field['id'].'" style="line-height: 2.5">'.$field['label'].'</label>';
                 echo '<div>';
