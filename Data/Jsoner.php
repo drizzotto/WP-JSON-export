@@ -19,14 +19,13 @@ class Jsoner
     /**
      * Jsoner constructor.
      *
-     * Jsoner constructor.
      * @param string $country
      * @param string $language
      * @param int $postId
-     * @param string $environment
      */
-    public function __construct(string $country, string $language, int $postId, string $environment = 'qa')
+    public function __construct(string $country, string $language, int $postId)
     {
+        $environment = \Post_Jsoner_Admin::getActiveSiteEnvironment();
         $this->country = $country;
         $this->language = $language;
         $this->postId = $postId;
@@ -80,7 +79,12 @@ class Jsoner
     public function loadFromFile(string $type = 'posts'): bool
     {
         try {
-            $this->data = $this->filesystem->loadFromJson($this->country, $this->language, $type) ?? [];
+            $prefix = 'post_jsoner_';
+            $type = json_decode(get_option($prefix.$type, '{}'),1);
+            if (empty($type) || (false === $type['enabled'])) {
+                return false;
+            }
+            $this->data = $this->filesystem->loadFromJson($this->country, $this->language, $type['value']) ?? [];
         } catch (Exception $e) {
             error_log($e->getMessage());
             return false;
@@ -118,6 +122,11 @@ class Jsoner
     public function saveToFile(array $data, string $type = 'posts'): bool
     {
         try {
+            $prefix = 'post_jsoner_';
+            $type = json_decode(get_option($prefix.$type, '{}'),1);
+            if (empty($type) || (false === $type['enabled'])) {
+                return false;
+            }
             $result = $this->filesystem->saveToJson($this->country, $this->language, $data, $type);
         } catch (Exception $e) {
             error_log($e->getMessage());

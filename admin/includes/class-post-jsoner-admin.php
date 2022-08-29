@@ -22,6 +22,21 @@ class Post_Jsoner_Admin
 
     private \Post_Jsoner_Settings_Fields $settings_Fields;
 
+    private array $exportTypes = [
+        'post' => [
+            'value' => 'post',
+            'enabled' => true
+        ],
+        'page' => [
+            'value' => 'page',
+            'enabled' => true
+        ],
+        'categories' => [
+            'value' => 'categories',
+            'enabled' => true
+        ]
+    ];
+
     /**
      * Initialize the class and set its properties.
      *
@@ -126,7 +141,39 @@ class Post_Jsoner_Admin
         );
     }
 
-    public function registerAndBuildFields() {
+    private function loadTypes(): void
+    {
+        $types = get_post_types(['_builtin' => false, 'post_type__not_in' => ['acf-field', 'acf-field-group']],'names');
+        foreach ($types as $type) {
+            if (!in_array($type,$this->exportTypes)) {
+                $this->exportTypes[] = [
+                    $type => [
+                        'value' => $type,
+                        'enabled' => false
+                    ]
+                ];
+            }
+        }
+
+    }
+
+    public static function getActiveSiteEnvironment(): string
+    {
+        return get_option('wp_site_env', WP_SITE_ENV);
+    }
+
+    public static function getGlobalOption($option_name, $default = false) {
+        global $wpdb;
+        $row = $wpdb->get_row($wpdb->prepare("SELECT option_value FROM wp_options WHERE option_name = %s LIMIT 1", $option_name));
+        if (is_object($row)) {
+            return $row->option_value;
+        }
+        return $default;
+    }
+
+    public function registerAndBuildFields(): void
+    {
+        $this->loadTypes();
         /**
          * First, we add_settings_section. This is necessary since all future settings must belong to one.
          * Second, add_settings_field
@@ -143,7 +190,7 @@ class Post_Jsoner_Admin
             'post_jsoner_general_settings'
         );
 
-        $fields = $this->settings_Fields->getFields();
+        $fields = $this->settings_Fields->getFields($this->exportTypes);
         $this->settings_Fields->resgiterSettings($fields);
     }
 

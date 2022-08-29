@@ -87,7 +87,7 @@ class Administrator
      * @since    1.0.0
      */
     public function run() {
-        $this->loader->run();
+        $this->loader->run($this->plugin_admin);
     }
 
     // LEGACY

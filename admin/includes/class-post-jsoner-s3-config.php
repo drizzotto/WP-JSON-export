@@ -39,7 +39,7 @@ class Post_Jsoner_S3_Config
      */
     private static function getSettings(): array
     {
-        $opt = get_option('post_jsoner_s3_settings', '[]');
+        $opt = \Post_Jsoner_Admin::getGlobalOption('post_jsoner_s3_settings', '[]');
         $out = json_decode($opt, 1);
         if (json_last_error() !== JSON_ERROR_NONE) {
             $out = [];

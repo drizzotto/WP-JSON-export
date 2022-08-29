@@ -28,6 +28,10 @@ class S3Wrapper
 
         $this->environment = $env;
 
+        if (\Post_Jsoner_S3_Config::isEnabled($this->environment) === '') {
+            throw new \Exception("S3 Disabled for current environment");
+        }
+
         $this->key = \Post_Jsoner_S3_Config::getAccessKey($this->environment);
         $this->secret = \Post_Jsoner_S3_Config::getSecretKey($this->environment);
         $this->bucket = \Post_Jsoner_S3_Config::getBucketValue($this->environment);
@@ -52,12 +56,7 @@ class S3Wrapper
     public function uploadFile(string $filename, string $targetPath): void
     {
         try {
-            $env = empty($this->environment) ? 'stage' : $this->environment;
-            error_log("EV: ".var_export($env,1)."\n",3,'/tmp/wp-errors.log');
-//            $keySrc = $env . $targetPath;
             $keySrc = \Post_Jsoner_S3_Config::getPathValue($this->environment) . $targetPath;
-            error_log("KS: {$keySrc}\n",3,'/tmp/wp-errors.log');
-
 
             $args = [
                 'Bucket' => $this->bucket,
@@ -69,7 +68,7 @@ class S3Wrapper
             error_log("AR: ".var_export($args,1)."\n",3,'/tmp/wp-errors.log');
 
             $result = $this->client->putObject($args);
-            error_log(var_export($result,1),3,'/tmp/wp-errors.log');
+            error_log("S3Wrapper UploadFile result:" . var_export($result,1),3,'/tmp/wp-errors.log');
         } catch (S3Exception $e) {
             error_log($e->getMessage(),3,'/tmp/wp-errors.log');
         }

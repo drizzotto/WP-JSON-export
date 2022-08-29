@@ -6,17 +6,31 @@ jQuery(document).ready(function ($) {
     $( function() {
         $( "#accordion" ).accordion();
     } );
-    $('.wait').hide();
+    $(".wait").hide();
+
+    $(".checked-text input[type=text],.checked-text input[type=checkbox]").on('change', function(evt) {
+        console.log(evt);
+        let value = $(this).parent().children('input[type=hidden]').val();
+        let valueObj = (value!=="") ? JSON.parse(value) : {};
+        let field = evt.target.id;
+        if (($(this).attr('type')==='checkbox')) {
+            valueObj['enabled'] = $(this).is(':checked');
+        } else {
+            valueObj['value'] = evt.target.value;
+        }
+        console.log("valueObj",valueObj);
+        $(this).parent().children('input[type=hidden]').val(JSON.stringify(valueObj));
+        console.log("HH",$(this).parent().children('input[type=hidden]').val());
+    });
 
     $( ".bucket, .path, .enabled" ).on( "change", function( event ) {
-        let settings = $('#post_jsoner_s3_settings').val();
+        let settings = $("#post_jsoner_s3_settings").val();
         let settingObj = (settings!=="") ? JSON.parse(settings) : {};
         let field = event.target.id;
-        let newVal = ($(this).attr('type')==='checkbox')
+        settingObj[field] = ($(this).attr('type')==='checkbox')
             ? $(this).is(':checked')
             : event.target.value;
-        settingObj[field] = newVal;
-        $('#post_jsoner_s3_settings').val(JSON.stringify(settingObj));
+        $("#post_jsoner_s3_settings").val(JSON.stringify(settingObj));
     });
 
     $('#site').change(function () {

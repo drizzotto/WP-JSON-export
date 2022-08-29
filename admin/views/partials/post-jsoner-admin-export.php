@@ -2,8 +2,9 @@
 !defined('ABSPATH') && exit;
 
 $sites = $this->getSites();
+?>
 
-if (is_array($sites)): ?>
+<?php if (is_array($sites)): ?>
     <section id="export-site">
         <p>
             <em>
@@ -36,3 +37,7 @@ if (is_array($sites)): ?>
     </form>
 </section>
 <div class="clearfix"></div>
+
+<p style="background-color: rgba(0,0,0,0.1); padding: 5px; font-style: italic;">
+    Export data for <strong><?php echo Post_Jsoner_Admin::getActiveSiteEnvironment() ?></strong> Environment
+</p>

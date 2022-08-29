@@ -32,25 +32,25 @@ use \Posts_Jsoner\autoload\Autoloader;
 
 $loader = new Autoloader(PLUGIN_DIR);
 
-use \Posts_Jsoner\Data\Jsoner;
+//use \Posts_Jsoner\Data\Jsoner;
 use \Posts_Jsoner\admin\Administrator;
 
 $admin = new Administrator();
 $admin->run();
 // Add filters and actions
-add_action('save_post', 'save_post_callback', 10, 2);
-function save_post_callback($post_id, $post)
-{
-    global $sitepress;
-    $country = 'default';
-    $lang = 'en';
-    if (!empty($sitepress)) { // is WPML enabled
-        $country = trim(get_blog_details(get_current_blog_id())->path, '/');
-        $lang = $sitepress->get_element_language_details($post_id)->language_code;
-    }
-
-    if (!empty($post_id)) {
-        $jsoner = new Jsoner($country, $lang, $post_id);
-        $jsoner->updateNode($post);
-    }
-}
+//add_action('save_post', 'save_post_callback', 10, 2);
+//function save_post_callback($post_id, $post)
+//{
+//    global $sitepress;
+//    $country = 'default';
+//    $lang = 'en';
+//    if (!empty($post_id)) {
+//        if (!empty($sitepress)) { // is WPML enabled
+//            $country = trim(get_blog_details(get_current_blog_id())->path, '/');
+//            $lang = $sitepress->get_element_language_details($post_id)->language_code ?? 'en';
+//        }
+//
+//        $jsoner = new Jsoner($country, $lang, $post_id);
+//        $jsoner->updateNode($post);
+//    }
+//}

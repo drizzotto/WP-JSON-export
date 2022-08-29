@@ -1,6 +1,6 @@
 <?php
 
-use \Posts_Jsoner\Data\MapperRegistry;
+use Posts_Jsoner\Data\MapperRegistry;
 
 class Post_Jsoner_Settings_Fields
 {
@@ -89,11 +89,18 @@ class Post_Jsoner_Settings_Fields
         foreach (['QA', 'UAT', 'PROD'] as $env) {
             $this->fields_def['post_jsoner_s3_settings']['args']['sections'][$env] = Post_Jsoner_S3_Config::getOptionSection($env);
         }
+
     }
 
-    public function getFields(): array
+    public function isS3Enabled($env = 'stage'): bool
+    {
+        return (strtoupper($env) === strtoupper(Post_Jsoner_Admin::getActiveSiteEnvironment()));
+    }
+
+    public function getFields($exportTypes): array
     {
         $result = [];
+        $this->appendExportTypes($exportTypes);
         foreach ($this->fields_def as $key => $definitions) {
             if (array_key_exists('is_s3', $definitions['args']) && (!$this->isS3Enabled())) {
                 $definitions['args']['disabled'] = 1;
@@ -109,8 +116,36 @@ class Post_Jsoner_Settings_Fields
             $result[] = $key;
         }
 
-
         return $result;
+    }
+
+    private function appendExportTypes($types): void
+    {
+        if (!empty($types)) {
+            foreach ($types as $type => $item) {
+                $id = 'post_jsoner_' . strtolower($type);
+                $initial = (array_key_exists($type, $item)) ? $item[$type] : ['value' => $type, 'enabled' => false];
+                $option = json_decode(get_option($id, json_encode($initial)), 1);
+
+                $title = 'Export filename for [' . ucfirst($type) . ']';
+                $this->fields_def[$id] = [
+                    'title' => $title,
+                    'args' => [
+                        'type' => 'checked-text',
+                        'subtype' => 'text',
+                        'id' => $id,
+                        'name' => $id,
+                        'class' => 'checked-text',
+                        'required' => 'true',
+                        'get_options_list' => '',
+                        'value' => $option['value'] ?? $type,
+                        'default' => $type,
+                        'value_type' => 'normal',
+                        'wp_data' => 'option'
+                    ]
+                ];
+            }
+        }
     }
 
     public function resgiterSettings(array $fields): void
@@ -136,45 +171,43 @@ class Post_Jsoner_Settings_Fields
         'wp_data'=>(option or post_meta),
         'post_id' =>
         */
-        if ($args['wp_data'] == 'option') {
-            $wp_data_value = get_option($args['name']);
-            if (empty($wp_data_value)) {
-                $wp_data_value = $args['value'];
+        if (array_key_exists('wp_data', $args)) {
+            if ($args['wp_data'] == 'option') {
+                $wp_data_value = get_option($args['name']);
+                if (empty($wp_data_value)) {
+                    $wp_data_value = $args['value'];
+                }
+            } elseif ($args['wp_data'] == 'post_meta') {
+                $wp_data_value = get_post_meta($args['post_id'], $args['name'], true);
             }
-        } elseif ($args['wp_data'] == 'post_meta') {
-            $wp_data_value = get_post_meta($args['post_id'], $args['name'], true);
         }
 
         $tooltip = (!empty($args['tooltip']))
             ? '<div class="help-tip"><p>' . $args['tooltip'] . '</p></div>'
             : '';
 
-        switch ($args['type']) {
-
-            case 'input':
-                $value = ($args['value_type'] == 'serialized') ? serialize($wp_data_value) : $wp_data_value;
-                $this->renderInput($args, $tooltip, $value);
-                break;
-            case 'select':
-                $options = MapperRegistry::getMappers();
-                $value = ($args['value_type'] == 'serialized') ? serialize($wp_data_value) : $wp_data_value;
-                $this->renderSelect($args['name'], $value, $options);
-                break;
-            case 'group':
-                $this->renderGroup($args);
-                break;
-            default:
-                # code...
-                break;
+        if (array_key_exists('type', $args)) {
+            switch ($args['type']) {
+                case 'input':
+                    $value = ($args['value_type'] == 'serialized') ? serialize($wp_data_value) : $wp_data_value;
+                    $this->renderInput($args, $tooltip, $value);
+                    break;
+                case 'select':
+                    $options = MapperRegistry::getMappers();
+                    $value = ($args['value_type'] == 'serialized') ? serialize($wp_data_value) : $wp_data_value;
+                    $this->renderSelect($args['name'], $value, $options);
+                    break;
+                case 'group':
+                    $this->renderGroup($args);
+                    break;
+                case 'checked-text':
+                    $this->renderCheckedText($args);
+                    break;
+                default:
+                    # code...
+                    break;
+            }
         }
-    }
-
-    public function isS3Enabled($env = 'stage'): bool
-    {
-//        return (
-//            (defined('S3_UPLOADS_KEY') && !empty(S3_UPLOADS_KEY))
-//            && (defined('S3_UPLOADS_SECRET') && !empty(S3_UPLOADS_SECRET)));
-        return (strtoupper($env) === strtoupper(WP_SITE_ENV));
     }
 
     /**
@@ -225,25 +258,49 @@ class Post_Jsoner_Settings_Fields
 
     private function renderGroup($args): void
     {
-        $this->fields_def['post_jsoner_s3_settings']['args']['value'] = get_option('post_jsoner_s3_settings',"{}");
-        $fieldVal  = json_decode($this->fields_def['post_jsoner_s3_settings']['args']['value'], 1);
-        echo '<input type="hidden" id="'.$args['id'].'" name="'.$args['name'].'" value="'.esc_attr($this->fields_def['post_jsoner_s3_settings']['args']['value']).'" />';
+        $this->fields_def['post_jsoner_s3_settings']['args']['value'] = get_option('post_jsoner_s3_settings', "{}");
+        $fieldVal = json_decode($this->fields_def['post_jsoner_s3_settings']['args']['value'], 1);
+        echo '<input type="hidden" id="' . $args['id'] . '" name="' . $args['name'] . '" value="' . esc_attr($this->fields_def['post_jsoner_s3_settings']['args']['value']) . '" />';
         echo '<div id="accordion">';
-        foreach ($args['sections'] as $key=>$section) {
+        foreach ($args['sections'] as $key => $section) {
             $activeClass = $this->isS3Enabled($key) ? 'active' : '';
-            echo '<h3 class="'.$activeClass.'">'.$key.'</h3>';
+            echo '<h3 class="' . $activeClass . '">' . $key . '</h3>';
             echo '<div>';
             foreach ($section as $field) {
-                $value = $fieldVal[$field['id']];
+                $value = array_key_exists($field['id'], $fieldVal) ? $fieldVal[$field['id']] : '';
                 echo '<div class="row">';
-                echo '<label for="'.$field['id'].'" style="line-height: 2.5">'.$field['label'].'</label>';
+                echo '<label for="' . $field['id'] . '" style="line-height: 2.5">' . $field['label'] . '</label>';
                 echo '<div>';
-                $this->renderInput($field,'',$value);
+                $this->renderInput($field, '', $value);
                 echo '</div>';
                 echo '</div>';
             }
             echo '</div>';
         }
+        echo '</div>';
+    }
+
+    private function renderCheckedText($args): void
+    {
+        $this->fields_def[$args['id']]['args']['value'] = get_option($args['id'], "{}");
+        $value = $this->fields_def[$args['id']]['args']['value'];
+        $option = json_decode($value, 1);
+
+        $checked = (array_key_exists('enabled', $option) && (true === (bool)$option['enabled']))
+            ? 'checked=checked'
+            : '';
+        $inputValue = (array_key_exists('value', $option))
+            ? $option['value']
+            : $args['default'];
+
+        echo '<div>';
+        echo '<input type="hidden" id="' . $args['id'] . '" name="' . $args['name'] . '" value="' . esc_attr($value) . '" />';
+        echo '<input type="hidden" id="' . $args['id'] . '_debug" name="' . $args['name'] . '_debug" value="' . var_export($option, 1) . '" />';
+        $args['id'] = $args['id'] . '_input';
+        $args['name'] = $args['name'] . '_input';
+        $this->renderInput($args, '', $inputValue);
+        echo '<input type="checkbox" ' . $checked . ' class="checked-text" id="' .
+            $args['id'] . '_check" name="' . $args['id'] . '_check" style="margin: 5px !important;" />';
         echo '</div>';
     }
 }

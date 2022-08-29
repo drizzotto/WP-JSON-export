@@ -32,7 +32,7 @@ class FileSystem
      *
      * @return bool
      */
-    public function saveToJson(string $country, string $lang, array $data, string $type = 'posts'): bool
+    public function saveToJson(string $country, string $lang, array $data, string $type = 'post'): bool
     {
         try {
             $filename = $this->getOrCreateFilename($country, $lang, $type);
