@@ -71,10 +71,6 @@ class Post_Jsoner_Admin
          * between the defined hooks and the functions defined in this
          * class.
          */
-        wp_enqueue_style('jquery-ui', plugin_dir_url( dirname(__FILE__) ) . 'assets/css/jquery-ui.min.css',[], $this->version, 'all' );
-        wp_enqueue_style('jquery-ui.structure', plugin_dir_url( dirname(__FILE__) ) . 'assets/css/jquery-ui.structure.min.css',[], $this->version, 'all' );
-        wp_enqueue_style('jquery-ui.theme', plugin_dir_url( dirname(__FILE__) ) . 'assets/css/jquery-ui.theme.min.css',[], $this->version, 'all' );
-        wp_enqueue_style('jquery.toast', plugin_dir_url( dirname(__FILE__) ) . 'assets/css/jquery.toast.min.css',[], $this->version, 'all' );
         wp_enqueue_style( $this->plugin_name, plugin_dir_url( dirname(__FILE__) ) . 'assets/css/post-jsoner-admin.css', array(), $this->version, 'all' );
     }
 
@@ -96,9 +92,7 @@ class Post_Jsoner_Admin
          * between the defined hooks and the functions defined in this
          * class.
          */
-        wp_deregister_script('jquery-ui-core');
-        wp_enqueue_script( 'jquery-ui', plugin_dir_url( dirname(__FILE__) ) . 'assets/js/jquery-ui.min.js', array( 'jquery' ), $this->version, false );
-        wp_enqueue_script( 'jquery-toast', plugin_dir_url( dirname(__FILE__) ) . 'assets/js/jquery.toast.min.js', array( 'jquery' ), $this->version, false );
+
         wp_enqueue_script( $this->plugin_name, plugin_dir_url( dirname(__FILE__) ) . 'assets/js/post-jsoner-admin.js', array( 'jquery' ), $this->version, false );
     }
 

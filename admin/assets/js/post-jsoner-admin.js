@@ -1,15 +1,9 @@
 "use strict";
-jQuery(document).ready(function ($) {
-    $( "#progressbar" ).progressbar({
-        value: false
-    });
-    $( function() {
-        $( "#accordion" ).accordion();
-    } );
-    $(".wait").hide();
 
+jQuery(document).ready(function ($) {
+    let toastContainer = document.querySelector('.toast-container');
+    accordion();
     $(".checked-text input[type=text],.checked-text input[type=checkbox]").on('change', function(evt) {
-        console.log(evt);
         let value = $(this).parent().children('input[type=hidden]').val();
         let valueObj = (value!=="") ? JSON.parse(value) : {};
         let field = evt.target.id;
@@ -18,9 +12,7 @@ jQuery(document).ready(function ($) {
         } else {
             valueObj['value'] = evt.target.value;
         }
-        console.log("valueObj",valueObj);
         $(this).parent().children('input[type=hidden]').val(JSON.stringify(valueObj));
-        console.log("HH",$(this).parent().children('input[type=hidden]').val());
     });
 
     $( ".bucket, .path, .enabled" ).on( "change", function( event ) {
@@ -33,7 +25,7 @@ jQuery(document).ready(function ($) {
         $("#post_jsoner_s3_settings").val(JSON.stringify(settingObj));
     });
 
-    $('#site').change(function () {
+    $('#site').on('change', function () {
         let options = $('#sites')[0].options;
         let val = $(this).val();
         for (let i=0;i<options.length;i++){
@@ -44,13 +36,26 @@ jQuery(document).ready(function ($) {
         }
     });
 
+    function toggleWait() {
+        const w = $(".wait.mask");
+        const p = $(".progress-gauge");
+        console.log(w.is(":visible"));
+        if (w.is(":visible")===true) {
+            setTimeout(function () {
+                p.hide();
+                w.hide();
+            },3000,{});
+        } else {
+            w.show();
+            p.show();
+        }
+    }
+
     function callBulkExport(event) {
-        let offset = $('#offset').val();
+        let offset = $("#offset").val();
         const step = 5;
 
-        $('.wait').show();
         if (offset===-1) {
-            $('.wait').hide();
             $('#offset').val(0);
             return true;
         }
@@ -60,12 +65,14 @@ jQuery(document).ready(function ($) {
             async: true,
             data: {
                 action: 'jsoner_bulk',
+                page: 'post_jsoner',
                 offset: offset,
                 step: step
             },
             dataType: "json"
         })
             .done(function (response) {
+                toggleWait();
                 if (response['success']) {
                     let next = response['next'];
                     $('#offset').val(next);
@@ -74,39 +81,41 @@ jQuery(document).ready(function ($) {
                       ? "The request was successful <br>" + (parseInt(offset) + parseInt(response['processed'])) + " sites exported"
                       : "The request was successful <br> Site exported"
                     ;
-                    $.toast({
-                        heading: 'Success',
-                        text: message,
-                        showHideTransition: 'slide',
-                        icon: 'success'
-                    })
+                    generateToast({
+                        toastContainer: toastContainer,
+                        message: message,
+                        background: "hsl(171 100% 46.1%)",
+                        color: "hsl(171 100% 13.1%)",
+                        length: "5000ms",
+                    });
                     if (response['next'] > -1) {
-                        $('.wait').show();
                         callBulkExport(event);
                     }
                 } else {
                     $('#offset').val(-1);
-                    $.toast({
-                        heading: 'Error',
-                        text: '<h2>Something went wrong.</h2><br>'+response['errors'],
-                        showHideTransition: 'slide',
-                        icon: 'error'
+                    generateToast({
+                        toastContainer: toastContainer,
+                        message: '<h2>Something went wrong.</h2><br>'+response['errors'],
+                        background: "hsl(350 100% 66.5%)",
+                        color: "hsl(350 100% 13.5%)",
+                        length: "5000ms",
                     });
                 }
             })
             .fail(function (response) {
+                toggleWait();
                 $('#offset').val(-1);
-                $.toast({
-                    heading: 'Error',
-                    text: '<h2>Something went wrong.</h2><br>'+response['errors'],
-                    showHideTransition: 'slide',
-                    icon: 'error'
+                generateToast({
+                    toastContainer: toastContainer,
+                    message: '<h2>Something went wrong.</h2><br>'+response['errors'],
+                    background: "hsl(350 100% 66.5%)",
+                    color: "hsl(350 100% 13.5%)",
+                    length: "5000ms",
                 });
-                $('.wait').hide();
             })
             .always(function (response) {
+                toggleWait();
                 if (response['next'] === -1) {
-                    $('.wait').hide();
                     $('#offset').val(0);
                 }
                 event.target.reset();
@@ -116,59 +125,103 @@ jQuery(document).ready(function ($) {
     /**
      * The file is enqueued from inc/admin/class-admin.php.
      */
-    $('#jsoner-bulk-export-form').submit(function (event) {
+    $(document).on('submit','#jsoner-bulk-export-form',function (event) {
         event.preventDefault(); // Prevent the default form submit.
         event.stopPropagation();
-        $('.wait').show();
+        $("wait").show();
         callBulkExport(event);
     });
 
-    $('#jsoner-site-export-form').submit(function (event) {
+    $(document).on('submit','#jsoner-site-export-form', function (event) {
         event.preventDefault(); // Prevent the default form submit.
         event.stopPropagation();
-        $('.wait').show();
-
+        toggleWait();
         $.ajax({
             url: ajaxurl,
             type: 'POST',
             async: true,
             data: {
                 action: 'jsoner_site',
+                page: 'post_jsoner',
                 site: $('#site').val(),
                 site_id: $('#site-id').val()
             },
             dataType: "json"
         })
             .done(function (response) {
+                toggleWait();
                 if (response['success']) {
-                    $.toast({
-                        heading: 'Error',
-                        text: '<h2>Something went wrong.</h2><br>'+response['errors'],
-                        showHideTransition: 'slide',
-                        icon: 'error'
+                    generateToast({
+                        toastContainer: toastContainer,
+                        message: '<h2>Something went wrong.</h2><br>'+response['errors'],
+                        background: "hsl(350 100% 66.5%)",
+                        color: "hsl(350 100% 13.5%)",
+                        length: "5000ms",
                     });
                 } else {
-                    $.toast({
-                        heading: 'Error',
-                        text: '<h2>Something went wrong.</h2><br>'+response['errors'],
-                        showHideTransition: 'slide',
-                        icon: 'error'
+                    generateToast({
+                        toastContainer: toastContainer,
+                        message: '<h2>Something went wrong.</h2><br>'+response['errors'],
+                        background: "hsl(350 100% 66.5%)",
+                        color: "hsl(350 100% 13.5%)",
+                        length: "5000ms",
                     });
                 }
             })
             .fail(function (response) {
-                $.toast({
-                    heading: 'Error',
-                    text: '<h2>Something went wrong.</h2><br>'+response['errors'],
-                    showHideTransition: 'slide',
-                    icon: 'error'
+                toggleWait();
+                generateToast({
+                    toastContainer: toastContainer,
+                    message: '<h2>Something went wrong.</h2><br>'+response['errors'],
+                    background: "hsl(350 100% 66.5%)",
+                    color: "hsl(350 100% 13.5%)",
+                    length: "5000ms",
                 });
-                $('.wait').hide();
             })
             .always(function () {
-                $('.wait').hide();
+                $("wait").hide();
                 event.target.reset();
             })
         ;
     });
 });
+
+function generateToast({   toastContainer,
+                           message,
+                           background = '#00214d',
+                           color = '#fffffe',
+                           length = '3000ms',
+                       }){
+
+    toastContainer.insertAdjacentHTML('beforeend', `<p class="toast" 
+    style="background-color: ${background};
+    color: ${color};
+    animation-duration: ${length}">
+    ${message}
+  </p>`)
+    const toast = toastContainer.lastElementChild;
+    toast.addEventListener('animationend', () => toast.remove())
+}
+
+function accordion() {
+    const acc = document.getElementsByClassName("accordion");
+    let index;
+
+    console.log("acc", acc);
+
+    for (index = 0; index < acc.length; index++) {
+        acc[index].addEventListener("click", function() {
+            /* Toggle between adding and removing the "active" class,
+            to highlight the button that controls the panel */
+            this.classList.toggle("active");
+
+            /* Toggle between hiding and showing the active panel */
+            const panel = this.nextElementSibling;
+            if (panel.style.display === "block") {
+                panel.style.display = "none";
+            } else {
+                panel.style.display = "block";
+            }
+        });
+    }
+}

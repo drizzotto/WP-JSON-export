@@ -3,7 +3,6 @@
 
 $sites = $this->getSites();
 ?>
-
 <?php if (is_array($sites)): ?>
     <section id="export-site">
         <p>
@@ -41,3 +40,9 @@ $sites = $this->getSites();
 <p style="background-color: rgba(0,0,0,0.1); padding: 5px; font-style: italic;">
     Export data for <strong><?php echo Post_Jsoner_Admin::getActiveSiteEnvironment() ?></strong> Environment
 </p>
+
+<div class="wait mask">
+    <div class="progress-gauge"></div>
+</div>
+
+<div class="toast-container"></div>

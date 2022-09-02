@@ -261,11 +261,11 @@ class Post_Jsoner_Settings_Fields
         $this->fields_def['post_jsoner_s3_settings']['args']['value'] = get_option('post_jsoner_s3_settings', "{}");
         $fieldVal = json_decode($this->fields_def['post_jsoner_s3_settings']['args']['value'], 1);
         echo '<input type="hidden" id="' . $args['id'] . '" name="' . $args['name'] . '" value="' . esc_attr($this->fields_def['post_jsoner_s3_settings']['args']['value']) . '" />';
-        echo '<div id="accordion">';
+        echo '<div>';
         foreach ($args['sections'] as $key => $section) {
-            $activeClass = $this->isS3Enabled($key) ? 'active' : '';
-            echo '<h3 class="' . $activeClass . '">' . $key . '</h3>';
-            echo '<div>';
+            $activeClass = $this->isS3Enabled($key) ? 'active-site' : '';
+            echo '<button class="accordion ' . $activeClass . '" onclick="return false;">' . $key . '</button>';
+            echo '<div class="panel">';
             foreach ($section as $field) {
                 $value = array_key_exists($field['id'], $fieldVal) ? $fieldVal[$field['id']] : '';
                 echo '<div class="row">';

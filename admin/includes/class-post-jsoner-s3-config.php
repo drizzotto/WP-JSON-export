@@ -74,10 +74,10 @@ class Post_Jsoner_S3_Config
     }
 
     /**
-     * @param $env
+     * @param string $env
      * @return string
      */
-    public static function isEnabled($env): string
+    public static function isEnabled(string $env = 'qa'): string
     {
         $settings = self::getSettings();
         $name = self::$prefix . strtolower($env) . '_enabled';
@@ -103,7 +103,7 @@ class Post_Jsoner_S3_Config
                 'label' => 'Bucket',
                 'required' => 'false',
                 'get_options_list' => '',
-                'value' => Post_Jsoner_S3_Config::getBucketValue($env),
+                'value' => Post_Jsoner_S3_Config::getBucketValue($_env),
                 'value_type' => 'normal',
                 'wp_data' => 'option',
                 'is_s3' => '1',
@@ -117,7 +117,7 @@ class Post_Jsoner_S3_Config
                 'label' => 'Path',
                 'required' => 'false',
                 'get_options_list' => '',
-                'value' => Post_Jsoner_S3_Config::getPathValue($env),
+                'value' => Post_Jsoner_S3_Config::getPathValue($_env),
                 'value_type' => 'normal',
                 'wp_data' => 'option',
                 'is_s3' => '1',
@@ -131,7 +131,7 @@ class Post_Jsoner_S3_Config
                 'label' => 'Is Enabled',
                 'required' => 'false',
                 'get_options_list' => '',
-                'value' => Post_Jsoner_S3_Config::isEnabled($env),
+                'value' => Post_Jsoner_S3_Config::isEnabled($_env),
                 'value_type' => 'normal',
                 'wp_data' => 'option',
                 'is_s3' => '1',

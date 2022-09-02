@@ -125,13 +125,14 @@ class S3Wrapper
     public static function checkConnection(): bool
     {
         try {
-            $s3Client = new S3Wrapper(WP_SITE_ENV);
+            $env = \Post_Jsoner_Admin::getActiveSiteEnvironment();
+            $s3Client = new S3Wrapper($env);
             $buckets = $s3Client->client->listBuckets();
             unset($s3Client);
             return !empty($buckets);
         }
         catch(\Exception $e) {
-            error_log("S3Wrapper::checkConnection->".$e->getMessage());
+            error_log("S3Wrapper::checkConnection->".$e->getMessage()."\n",3,'wp-errors.log');
             unset($s3Client);
             return false;
         }
