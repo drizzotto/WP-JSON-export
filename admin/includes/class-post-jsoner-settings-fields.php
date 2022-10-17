@@ -264,8 +264,9 @@ class Post_Jsoner_Settings_Fields
         echo '<div>';
         foreach ($args['sections'] as $key => $section) {
             $activeClass = $this->isS3Enabled($key) ? 'active-site' : '';
+            $isOpen = $this->isS3Enabled($key) ? 'display: block;' : '';
             echo '<button class="accordion ' . $activeClass . '" onclick="return false;">' . $key . '</button>';
-            echo '<div class="panel">';
+            echo '<div class="panel" style="' . $isOpen . '">';
             foreach ($section as $field) {
                 $value = array_key_exists($field['id'], $fieldVal) ? $fieldVal[$field['id']] : '';
                 echo '<div class="row">';
@@ -295,12 +296,14 @@ class Post_Jsoner_Settings_Fields
 
         echo '<div>';
         echo '<input type="hidden" id="' . $args['id'] . '" name="' . $args['name'] . '" value="' . esc_attr($value) . '" />';
-        echo '<input type="hidden" id="' . $args['id'] . '_debug" name="' . $args['name'] . '_debug" value="' . var_export($option, 1) . '" />';
         $args['id'] = $args['id'] . '_input';
         $args['name'] = $args['name'] . '_input';
+        echo "<table><tr><td class='checked-text'>";
         $this->renderInput($args, '', $inputValue);
-        echo '<input type="checkbox" ' . $checked . ' class="checked-text" id="' .
+        echo "</td><td class='checked-text'>";
+        echo '<label for="' . $args['id'] . '_check">Enabled</label><input type="checkbox" ' . $checked . ' class="checked-text" id="' .
             $args['id'] . '_check" name="' . $args['id'] . '_check" style="margin: 5px !important;" />';
+        echo "</td></tr></table>";
         echo '</div>';
     }
 }

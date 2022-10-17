@@ -63,14 +63,14 @@ class S3Wrapper
                 'Key' => $keySrc,
                 'SourceFile' => $filename,
             ];
-            error_log("FN: {$filename}\n",3,'/tmp/wp-errors.log');
-            error_log("TP: {$targetPath}\n",3,'/tmp/wp-errors.log');
-            error_log("AR: ".var_export($args,1)."\n",3,'/tmp/wp-errors.log');
+            error_log("FN: {$filename}\n",3,DEBUG_FILE);
+            error_log("TP: {$targetPath}\n",3,DEBUG_FILE);
+            error_log("AR: ".var_export($args,1)."\n",3,DEBUG_FILE);
 
             $result = $this->client->putObject($args);
-            error_log("S3Wrapper UploadFile result:" . var_export($result,1),3,'/tmp/wp-errors.log');
+            error_log("S3Wrapper UploadFile result:" . var_export($result,1),3,DEBUG_FILE);
         } catch (S3Exception $e) {
-            error_log($e->getMessage(),3,'/tmp/wp-errors.log');
+            error_log($e->getMessage(),3,DEBUG_FILE);
         }
     }
 
@@ -84,7 +84,7 @@ class S3Wrapper
             $keySrc = \Post_Jsoner_S3_Config::getPathValue($this->environment) . $target;
             $this->client->uploadDirectory($source, $this->bucket, $keySrc);
         } catch (\Exception $e) {
-            error_log("uploadDirectory: ". $e->getMessage(),3,'/tmp/wp-errors.log');
+            error_log("uploadDirectory: ". $e->getMessage(),3,DEBUG_FILE);
         }
     }
 
@@ -132,7 +132,7 @@ class S3Wrapper
             return !empty($buckets);
         }
         catch(\Exception $e) {
-            error_log("S3Wrapper::checkConnection->".$e->getMessage()."\n",3,'wp-errors.log');
+            error_log("S3Wrapper::checkConnection->".$e->getMessage()."\n",3,DEBUG_FILE);
             unset($s3Client);
             return false;
         }

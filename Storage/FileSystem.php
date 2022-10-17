@@ -2,8 +2,6 @@
 
 namespace Posts_Jsoner\Storage;
 
-use PHPMailer\PHPMailer\Exception;
-
 class FileSystem
 {
     /**
@@ -18,8 +16,8 @@ class FileSystem
         try {
             $filename = $this->getOrCreateFilename($country, $lang, $type);
             return json_decode($this->load($filename), 1) ?? [];
-        } catch (Exception $e) {
-            error_log($e->getMessage());
+        } catch (\Exception $e) {
+            error_log($e->getMessage(),3,DEBUG_FILE);
             return [];
         }
     }
@@ -37,8 +35,8 @@ class FileSystem
         try {
             $filename = $this->getOrCreateFilename($country, $lang, $type);
             $out = $this->save($filename, json_encode($data));
-        } catch (Exception $e) {
-            error_log($e->getMessage());
+        } catch (\Exception $e) {
+            error_log($e->getMessage(),3,DEBUG_FILE);
             $out = false;
         }
         return $out;
@@ -63,7 +61,7 @@ class FileSystem
      * @param string $type
      *
      * @return string
-     * @throws Exception
+     * @throws \Exception
      */
     private function getOrCreateFilename(string $country, string $lang, string $type): string
     {
@@ -72,7 +70,7 @@ class FileSystem
         if (!file_exists($path)) {
             $ok = mkdir($path, 0777, true);
             if (!$ok) {
-                throw new Exception("Unable to create path");
+                throw new \Exception("Unable to create path");
             }
         }
         $filename = $path . DIRECTORY_SEPARATOR . $type . '.json';

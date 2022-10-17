@@ -13,13 +13,6 @@ $tab = isset($_GET['tab']) ? $_GET['tab'] : $default_tab;
             <a href="?page=post-jsoner&tab=export"
                class="nav-tab <?php echo ($tab == 'export') ? 'nav-tab-active' : ''; ?>">Export</a>
         </nav>
-<!--        <div class="wait">-->
-<!--            <div class="mask"></div>-->
-<!--            <div class="progressbar-container">-->
-<!--                <div id="progressbar"></div>-->
-<!--            </div>-->
-<!--        </div>-->
-
         <div class="tab-content">
             <?php
             if ($tab == 'export'):

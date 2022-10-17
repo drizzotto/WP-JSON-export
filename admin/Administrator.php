@@ -141,7 +141,7 @@ class Administrator
                     continue;
                 }
                 if (!BulkExport::exportSite($path, $item->blog_id)) {
-                    error_log("Site {$path} was not exporter\n",3, 'wp-errors.log');
+                    error_log("Site {$path} was not exporter\n",3, DEBUG_FILE);
                     $errors[] = $path;
                 }
                 $count++;
@@ -149,7 +149,7 @@ class Administrator
             $response['processed'] = $count;
         } else {
             if (!BulkExport::exportSite('default', 0)) {
-                error_log("Site default was not exported\n",3, 'wp-errors.log');
+                error_log("Site default was not exported\n",3, DEBUG_FILE);
                 $errors[] = 'default';
             }
             $response['processed'] = 1;

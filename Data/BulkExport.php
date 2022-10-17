@@ -42,7 +42,7 @@ class BulkExport
                     try {
                         $s3->uploadDirectory($source, $target);
                     } catch (\Exception $e) {
-                        error_log("BulkExport::exportSite: S3 upload Exception: ".$e->getMessage()."\n", 3, '/tmp/wp-errors.log');
+                        error_log("BulkExport::exportSite: S3 upload Exception: ".$e->getMessage()."\n", 3, DEBUG_FILE);
                     }
                 }
             }
@@ -154,7 +154,7 @@ class BulkExport
         try {
             $s3wrapper = new S3Wrapper($env);
         } catch (\Exception $e) {
-            \error_log("BulkExport::getS3 error: ".$e->getMessage(),3,'/tmp/wp-errors.log');
+            \error_log("BulkExport::getS3 error: ".$e->getMessage(),3,DEBUG_FILE);
             $s3wrapper = (object)null;
         }
         return $s3wrapper;
@@ -192,6 +192,10 @@ class BulkExport
             'oembed_cache',
             'user_request',
             'wp_block',
+            'wp_navigation',
+            'wp_global_styles',
+            'wp_template_part',
+            'wp_template',
         ];
         $prefix = 'post_jsoner_';
         foreach (get_post_types('', 'names') as $post_type) {
@@ -205,7 +209,8 @@ class BulkExport
             if (!empty($type) && (true === $type['enabled'])) {
                 $elements = self::getPosts($post_type, $_lang);
                 if (!empty($elements)) {
-                    $filesystem->saveToJson($siteName, $_lang, $elements, $type['value']);
+                    $value = $type['value'] ?? '';
+                    $filesystem->saveToJson($siteName, $_lang, $elements, $value);
                 }
             }
         }

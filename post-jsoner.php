@@ -28,6 +28,10 @@ foreach (glob(dirname(__FILE__) . '/autoload/*.php') as $file) {
     }
 }
 
+if (!defined('DEBUG_FILE')) {
+    define('DEBUG_FILE','/var/log/wp-error.log');
+}
+
 use \Posts_Jsoner\autoload\Autoloader;
 
 $loader = new Autoloader(PLUGIN_DIR);

@@ -33,7 +33,7 @@ class Jsoner
         try {
             $this->s3wrapper = new S3Wrapper($environment);
         } catch (\Exception $e) {
-            \error_log("S3Wrapper error: ".$e->getMessage(),3,'/tmp/wp-errors.log');
+            \error_log("S3Wrapper error: ".$e->getMessage(),3,DEBUG_FILE);
         }
     }
 
@@ -49,7 +49,7 @@ class Jsoner
             $nodeId = $this->findByColumn($this->data, $post->ID, 'ID');
             $mapper = MapperFactory::getMapper(JSONER_MAPPER);
             $template = $mapper->getTemplate($post->post_type);
-            error_log(var_export($template,1),3,'/tmp/wp-errors.log');
+            error_log(var_export($template,1),3,DEBUG_FILE);
             $normalizedCustom = $mapper->reformatCustoms($post->ID, $post->post_type);
             $mappedPost = $mapper->map($post, $template, $normalizedCustom);
             if ($nodeId >= 0) { // updates existing node
@@ -65,7 +65,7 @@ class Jsoner
                 $this->s3wrapper->uploadFile(JSONER_EXPORT_PATH . $filename, $filename);
             }
         } catch (\Exception $e) {
-            error_log($e->getMessage(),3,'/tmp/wp-errors.log');
+            error_log($e->getMessage(),3,DEBUG_FILE);
             return false;
         }
         return true;
@@ -85,8 +85,8 @@ class Jsoner
                 return false;
             }
             $this->data = $this->filesystem->loadFromJson($this->country, $this->language, $type['value']) ?? [];
-        } catch (Exception $e) {
-            error_log($e->getMessage());
+        } catch (\Exception $e) {
+            error_log($e->getMessage(),3,DEBUG_FILE);
             return false;
         }
         return true;
@@ -128,8 +128,8 @@ class Jsoner
                 return false;
             }
             $result = $this->filesystem->saveToJson($this->country, $this->language, $data, $type);
-        } catch (Exception $e) {
-            error_log($e->getMessage());
+        } catch (\Exception $e) {
+            error_log($e->getMessage(),3,DEBUG_FILE);
             return false;
         }
         return $result;
