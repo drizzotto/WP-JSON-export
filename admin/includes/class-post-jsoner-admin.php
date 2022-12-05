@@ -234,6 +234,7 @@ class Post_Jsoner_Admin
         if (function_exists('get_sites')) {
             return get_sites([
                 'public' => 1,
+                'archived' => 0,
                 'path__not_in' => ['/', 'uk'],
                 'orderby' => 'path',
             ]);

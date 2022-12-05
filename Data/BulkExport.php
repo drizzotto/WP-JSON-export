@@ -16,7 +16,7 @@ class BulkExport
     public static function exportSite(string $siteName, int $blogId): bool
     {
         set_time_limit(0);
-        $env = \Post_Jsoner_Admin::getActiveSiteEnvironment();
+        $env = \Post_Jsoner_Admin::getActiveSiteEnvironment() ?? 'qa';
         $filesystem = new FileSystem();
         $s3 = self::getS3($env);
         $langs = self::getLangs($blogId);
@@ -42,7 +42,7 @@ class BulkExport
                     try {
                         $s3->uploadDirectory($source, $target);
                     } catch (\Exception $e) {
-                        error_log("BulkExport::exportSite: S3 upload Exception: ".$e->getMessage()."\n", 3, DEBUG_FILE);
+                        error_log("\n---\nBulkExport::exportSite: S3 upload Exception: ".$e->getTraceAsString()."\n---\n", 3, DEBUG_FILE);
                     }
                 }
             }
@@ -102,6 +102,10 @@ class BulkExport
      */
     private static function getPosts(string $type, string $lang = ''): array
     {
+        if (empty($lang)) {
+            $lang = apply_filters( 'wpml_current_language', null );
+        }
+
         $result = [];
         $args = [
             'post_type' => $type,
@@ -116,17 +120,13 @@ class BulkExport
         if (!empty($lang)) {
             global $sitepress;
             if (!empty($sitepress)) {
+                $filteredPosts = [];
                 foreach ($posts as $post) {
-                    $trid = $sitepress->get_element_trid($post->ID);
-                    $translation = $sitepress->get_element_translations($trid);
-                    if (empty($translation) && !(is_array($translation) && array_key_exists($lang,
-                                $translation) && is_object($translation[$lang]) && property_exists($translation[$lang],
-                                'element_id'))) {
-                        continue;
-                    }
-                    if (!empty($translation[$lang])) {
-                        $filteredPosts[] = get_post($translation[$lang]->element_id);
-                    }
+                    $trpid = apply_filters('wpml_object_id', $post->ID, $type, true, $lang);
+                    $filteredPosts[] = get_post($trpid);
+                }
+                if (empty($filteredPosts)) {
+                    $filteredPosts = $posts;
                 }
             }
         }
@@ -134,8 +134,12 @@ class BulkExport
         $posts = array_filter($filteredPosts);
 
         if (!empty($posts)) {
-            $mapper = MapperFactory::getMapper(JSONER_MAPPER);
-            $template = $mapper->getTemplate($type, JSONER_MAPPER);
+            $bid = get_current_blog_id();
+            switch_to_blog(1);
+            $mapperName = get_option('post_jsoner_mapper', 'default');
+            switch_to_blog($bid);
+            $mapper = MapperFactory::getMapper($mapperName);
+            $template = $mapper->getTemplate($type, $mapperName);
             foreach ($posts as $post) {
                 $normalizedCustom = $mapper->reformatCustoms($post->ID);
                 $result[] = $mapper->map((object)$post, $template, $normalizedCustom);
@@ -166,11 +170,14 @@ class BulkExport
      */
     private static function getLangs(int $blogId): array
     {
-        $result = ['code' => ''];
+        $result = [];
         global $sitepress;
         if (!empty($sitepress)) {
             switch_to_blog($blogId);
             $result = @$sitepress->get_active_languages(1);
+        }
+        if (empty($result)) {
+            $result = ['default' => ['code' => 'default']];
         }
         return $result;
     }
@@ -183,6 +190,7 @@ class BulkExport
      */
     private static function saveElement(FileSystem $filesystem, string $siteName, string $_lang): void
     {
+        global $wp_post_types;
         $builtin_types = [
             'attachment',
             'revision',
@@ -198,18 +206,20 @@ class BulkExport
             'wp_template',
         ];
         $prefix = 'post_jsoner_';
-        foreach (get_post_types('', 'names') as $post_type) {
-            if (in_array($post_type, $builtin_types)) {
+        $exclude = array_merge(['acf-field', 'acf-field-group'], $builtin_types);
+
+        foreach ($wp_post_types as $post_type) {
+            if (in_array($post_type->name, $exclude)) {
                 continue;
             }
-            $opt = $prefix.$post_type;
+            $opt = $prefix.$post_type->name;
             $obj = \Post_Jsoner_Admin::getGlobalOption($opt);
             $type = json_decode($obj,1);
 
             if (!empty($type) && (true === $type['enabled'])) {
-                $elements = self::getPosts($post_type, $_lang);
+                $elements = self::getPosts($post_type->name, $_lang);
                 if (!empty($elements)) {
-                    $value = $type['value'] ?? '';
+                    $value = $type['value'] ?? $post_type->name;
                     $filesystem->saveToJson($siteName, $_lang, $elements, $value);
                 }
             }

@@ -80,6 +80,9 @@ class Post_Jsoner_S3_Config
     public static function isEnabled(string $env = 'qa'): string
     {
         $settings = self::getSettings();
+        if (empty($env)) {
+            $env = 'qa';
+        }
         $name = self::$prefix . strtolower($env) . '_enabled';
         return  (empty($settings) || !array_key_exists($name, $settings))
             ? ''

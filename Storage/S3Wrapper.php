@@ -25,8 +25,10 @@ class S3Wrapper
      */
     public function __construct(string $env = 'qa')
     {
-
-        $this->environment = $env;
+        $_env = \Post_Jsoner_Admin::getActiveSiteEnvironment() ?? 'qa';
+        $this->environment = empty(strtolower($env))
+            ? $_env
+            : strtolower($env);
 
         if (\Post_Jsoner_S3_Config::isEnabled($this->environment) === '') {
             throw new \Exception("S3 Disabled for current environment");
@@ -81,7 +83,7 @@ class S3Wrapper
     public function uploadDirectory(string $source, string $target): void
     {
         try {
-            $keySrc = \Post_Jsoner_S3_Config::getPathValue($this->environment) . $target;
+            $keySrc = \Post_Jsoner_S3_Config::getPathValue(strtolower($this->environment)) . $target;
             $this->client->uploadDirectory($source, $this->bucket, $keySrc);
         } catch (\Exception $e) {
             error_log("uploadDirectory: ". $e->getMessage(),3,DEBUG_FILE);
@@ -126,13 +128,17 @@ class S3Wrapper
     {
         try {
             $env = \Post_Jsoner_Admin::getActiveSiteEnvironment();
+            if (empty($env)) {
+                \error_log("checkConnection: \n".var_export($env,1)."\n",3,DEBUG_FILE);
+                $env = 'QA';
+            }
             $s3Client = new S3Wrapper($env);
             $buckets = $s3Client->client->listBuckets();
             unset($s3Client);
             return !empty($buckets);
         }
         catch(\Exception $e) {
-            error_log("S3Wrapper::checkConnection->".$e->getMessage()."\n",3,DEBUG_FILE);
+            error_log("S3Wrapper::checkConnection->".$e->getTraceAsString()."\n",3,DEBUG_FILE);
             unset($s3Client);
             return false;
         }

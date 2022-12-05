@@ -93,9 +93,9 @@ class DefaultMapper implements iMapper
         if (array_key_exists("brand_logo", $customFields)) {
             $image = wp_get_attachment_image_src($customFields['brand_logo'], 'full');
             $customFields['logo'] = [
-                "href" => $image[0],
-                "height" => $image[1],
-                "width" => $image[2]
+                "href" => $image[0] ?? '',
+                "height" => $image[1] ?? '',
+                "width" => $image[2] ?? ''
             ];
         }
 
