@@ -34,16 +34,14 @@ class BulkExport
             self::saveElement($filesystem, $siteName, $_lang);
         }
 
-        if ((!empty($s3) && S3Wrapper::checkConnection())) {
-            if (\Post_Jsoner_S3_Config::isEnabled($env)) {
-                $source = JSONER_EXPORT_PATH . DIRECTORY_SEPARATOR . $siteName;
-                if (file_exists($source)) {
-                    $target = $siteName;
-                    try {
-                        $s3->uploadDirectory($source, $target);
-                    } catch (\Exception $e) {
-                        error_log("\n---\nBulkExport::exportSite: S3 upload Exception: ".$e->getTraceAsString()."\n---\n", 3, DEBUG_FILE);
-                    }
+        if (!empty($s3) && S3Wrapper::checkConnection() && \Post_Jsoner_S3_Config::isEnabled($env)) {
+            $source = JSONER_EXPORT_PATH . DIRECTORY_SEPARATOR . $siteName;
+            if (file_exists($source)) {
+                $target = $siteName;
+                try {
+                    $s3->uploadDirectory($source, $target);
+                } catch (\Exception $exception) {
+                    error_log("\n---\nBulkExport::exportSite: S3 upload Exception: ".$exception->getTraceAsString()."\n---\n", 3, DEBUG_FILE);
                 }
             }
         }
@@ -71,10 +69,11 @@ class BulkExport
                 $sitepress->switch_lang($lang);
             }
         }
+
         $categories = [];
         $category = @get_categories(['suppress_filters' => false]);
         foreach ($category as $cat) {
-            if (strpos(strtolower($cat->slug), "uncategorized") !== false) {
+            if (str_contains(strtolower($cat->slug), "uncategorized")) {
                 continue;
             }
 
@@ -97,7 +96,6 @@ class BulkExport
     /**
      * @param string $type
      * @param string $lang
-     *
      * @return array
      */
     private static function getPosts(string $type, string $lang = ''): array
@@ -125,6 +123,7 @@ class BulkExport
                     $trpid = apply_filters('wpml_object_id', $post->ID, $type, true, $lang);
                     $filteredPosts[] = get_post($trpid);
                 }
+
                 if (empty($filteredPosts)) {
                     $filteredPosts = $posts;
                 }
@@ -134,10 +133,9 @@ class BulkExport
         $posts = array_filter($filteredPosts);
 
         if (!empty($posts)) {
-            $bid = get_current_blog_id();
-            switch_to_blog(1);
+            $sid = self::toggleDefaultSite();
             $mapperName = get_option('post_jsoner_mapper', 'default');
-            switch_to_blog($bid);
+            self::toggleDefaultSite($sid);
             $mapper = MapperFactory::getMapper($mapperName);
             $template = $mapper->getTemplate($type, $mapperName);
             foreach ($posts as $post) {
@@ -149,24 +147,34 @@ class BulkExport
         return $result;
     }
 
+    private static function toggleDefaultSite(int $siteId=1): int
+    {
+        $bid = ($siteId==1) ? get_current_blog_id() : $siteId;
+        if (is_multisite()) {
+            switch_to_blog($bid);
+        }
+        return $bid;
+    }
+
     /**
-     * @param $env
+     * @param string $env
      * @return object
      */
-    private static function getS3($env): object
+    private static function getS3(string $env): object
     {
         try {
             $s3wrapper = new S3Wrapper($env);
-        } catch (\Exception $e) {
-            \error_log("BulkExport::getS3 error: ".$e->getMessage(),3,DEBUG_FILE);
+        } catch (\Exception $exception) {
+            \error_log("BulkExport::getS3 error: ".$exception->getMessage(),3,DEBUG_FILE);
             $s3wrapper = (object)null;
         }
+
         return $s3wrapper;
     }
 
     /**
      * @param int $blogId
-     * @return string[]
+     * @return array|array[]
      */
     private static function getLangs(int $blogId): array
     {
@@ -176,9 +184,11 @@ class BulkExport
             switch_to_blog($blogId);
             $result = @$sitepress->get_active_languages(1);
         }
+
         if (empty($result)) {
-            $result = ['default' => ['code' => 'default']];
+            return ['default' => ['code' => 'default']];
         }
+
         return $result;
     }
 
@@ -212,6 +222,7 @@ class BulkExport
             if (in_array($post_type->name, $exclude)) {
                 continue;
             }
+
             $opt = $prefix.$post_type->name;
             $obj = \Post_Jsoner_Admin::getGlobalOption($opt);
             $type = json_decode($obj,1);

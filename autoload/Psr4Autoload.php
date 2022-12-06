@@ -4,7 +4,10 @@ namespace Posts_Jsoner\autoload;
 
 class Psr4Autoload
 {
-    public static function getNamespaces(string $root = '')
+    /**
+     * @return array<string, mixed>
+     */
+    public static function getNamespaces(string $root = ''): array
     {
         return [
             'Posts_Jsoner' => $root . DIRECTORY_SEPARATOR,

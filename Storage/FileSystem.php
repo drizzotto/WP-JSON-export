@@ -8,7 +8,6 @@ class FileSystem
      * @param string $country
      * @param string $lang
      * @param string $type
-     *
      * @return array
      */
     public function loadFromJson(string $country, string $lang, string $type = 'posts'): array
@@ -16,8 +15,8 @@ class FileSystem
         try {
             $filename = $this->getOrCreateFilename($country, $lang, $type);
             return json_decode($this->load($filename), 1) ?? [];
-        } catch (\Exception $e) {
-            error_log($e->getMessage(),3,DEBUG_FILE);
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage(),3,DEBUG_FILE);
             return [];
         }
     }
@@ -25,9 +24,8 @@ class FileSystem
     /**
      * @param string $country
      * @param string $lang
-     * @param array  $data
+     * @param array $data
      * @param string $type
-     *
      * @return bool
      */
     public function saveToJson(string $country, string $lang, array $data, string $type = 'post'): bool
@@ -35,17 +33,17 @@ class FileSystem
         try {
             $filename = $this->getOrCreateFilename($country, $lang, $type);
             $out = $this->save($filename, json_encode($data));
-        } catch (\Exception $e) {
-            error_log($e->getMessage(),3,DEBUG_FILE);
+        } catch (\Exception $exception) {
+            error_log($exception->getMessage(),3,DEBUG_FILE);
             $out = false;
         }
+
         return $out;
     }
 
     /**
      * @param string $name
      * @param string $format
-     *
      * @return array
      */
     public static function loadConfig(string $name, string $format='json'): array
@@ -59,7 +57,6 @@ class FileSystem
      * @param string $country
      * @param string $lang
      * @param string $type
-     *
      * @return string
      * @throws \Exception
      */
@@ -73,19 +70,20 @@ class FileSystem
                 throw new \Exception("Unable to create path");
             }
         }
+
         $filename = $path . DIRECTORY_SEPARATOR . $type . '.json';
         if (!file_exists($filename)) {
             touch($filename);
         }
+
         return $filename;
     }
 
     /**
      * @param string $filename - the full path to the file
-     *
-     * @return string
+     * @return string|bool
      */
-    private static function load(string $filename): string
+    private static function load(string $filename): string|bool
     {
         return (file_exists($filename))
             ? file_get_contents($filename)
@@ -95,7 +93,6 @@ class FileSystem
     /**
      * @param string $filename - the full path to the file
      * @param string $content
-     *
      * @return bool
      */
     private static function save(string $filename, string $content): bool

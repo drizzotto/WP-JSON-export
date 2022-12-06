@@ -4,24 +4,19 @@ namespace Posts_Jsoner\autoload;
 class Autoloader
 {
     private array $prefixes;
-    private string $plguin_dir;
+
 
     public function __construct(string $plguin_dir)
     {
-        $this->plguin_dir = $plguin_dir;
-
         foreach (Psr4Autoload::getNamespaces($plguin_dir) as $prefix=>$class) {
             $this->addNamespace($prefix, $class);
         }
 
-        spl_autoload_register(array($this, 'loadClass'));
+        spl_autoload_register(function (string $class) : string {
+            return $this->loadClass($class);
+        });
     }
 
-    /**
-     * @param string $prefix
-     * @param string $base_dir
-     * @param bool   $prepend
-     */
     public function addNamespace(string $prefix, string $base_dir, bool $prepend = false): void
     {
         // normalize namespace prefix
@@ -31,7 +26,7 @@ class Autoloader
         $base_dir = rtrim($base_dir, DIRECTORY_SEPARATOR) . '/';
 
         // initialize the namespace prefix array
-        if (isset($this->prefixes[$prefix]) === false) {
+        if (!isset($this->prefixes[$prefix])) {
             $this->prefixes[$prefix] = array();
         }
 
@@ -39,16 +34,11 @@ class Autoloader
         if ($prepend) {
             array_unshift($this->prefixes[$prefix], $base_dir);
         } else {
-            array_push($this->prefixes[$prefix], $base_dir);
+            $this->prefixes[$prefix][] = $base_dir;
         }
     }
 
-    /**
-     * @param string $class
-     *
-     * @return false|string
-     */
-    public function loadClass(string $class)
+    public function loadClass(string $class): string
     {
         // the current namespace prefix
         $prefix = $class;
@@ -79,15 +69,14 @@ class Autoloader
     }
 
     /**
-     * @param $prefix
-     * @param $relative_class
-     *
-     * @return false|string
+     * @param string $prefix
+     * @param string $relative_class
+     * @return string
      */
-    protected function loadMappedFile($prefix, $relative_class)
+    protected function loadMappedFile(string $prefix, string $relative_class): string
     {
         // are there any base directories for this namespace prefix?
-        if (isset($this->prefixes[$prefix]) === false) {
+        if (!isset($this->prefixes[$prefix])) {
             return false;
         }
 
@@ -113,16 +102,16 @@ class Autoloader
     }
 
     /**
-     * @param $file
-     *
+     * @param string $file
      * @return bool
      */
-    protected function requireFile($file)
+    protected function requireFile(string $file): bool
     {
         if (file_exists($file)) {
             require_once $file;
             return true;
         }
+
         return false;
     }
 }

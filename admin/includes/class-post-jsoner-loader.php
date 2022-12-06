@@ -10,7 +10,7 @@ class Post_Jsoner_Loader
      * @access   protected
      * @var      array    $actions    The actions registered with WordPress to fire when the plugin loads.
      */
-    protected array $actions;
+    protected array $actions = array();
 
     /**
      * The array of filters registered with WordPress.
@@ -19,20 +19,7 @@ class Post_Jsoner_Loader
      * @access   protected
      * @var      array    $filters    The filters registered with WordPress to fire when the plugin loads.
      */
-    protected array $filters;
-
-    /**
-     * Initialize the collections used to maintain the actions and filters.
-     *
-     * @since    1.0.0
-     */
-    public function __construct()
-    {
-
-        $this->actions = array();
-        $this->filters = array();
-
-    }
+    protected array $filters = array();
 
     /**
      * Add a new action to the collection to be registered with WordPress.

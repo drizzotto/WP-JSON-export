@@ -2,56 +2,68 @@
 
 class Post_Jsoner_S3_Config
 {
-    private static $prefix = 'post_jsoner_s3_';
+    private static string $prefix = 'post_jsoner_s3_';
 
-    /**
-     * @param $env
-     * @return string
-     */
-    public static function getAccessKey($env): string
+    public static function getAccessKey(string $env): string
     {
         $const = 'S3_UPLOADS_' . strtoupper($env) . '_KEY';
-        return constant($const);
+        try {
+            return constant($const);
+        } catch (Throwable $exception) {
+            error_log("getAccessKey Error {$const}\n" . $exception->getMessage());
+        }
+        return "";
     }
 
     /**
-     * @param $env
+     * @param string $env
      * @return string
      */
-    public static function getSecretKey($env): string
+    public static function getSecretKey(string $env): string
     {
         $const = 'S3_UPLOADS_' . strtoupper($env) . '_SECRET';
-        return constant($const);
+        try {
+            return constant($const);
+        } catch (Throwable $exception) {
+            error_log("getSecretKey Error {$const}\n" . $exception->getMessage());
+        }
+        return "";
     }
 
     /**
-     * @param $env
+     * @param string $env
      * @return string
      */
-    public static function getRegion($env): string
+    public static function getRegion(string $env): string
     {
         $const = 'S3_UPLOADS_' . strtoupper($env) . '_REGION';
-        return constant($const);
+        try {
+            return constant($const);
+        } catch (Throwable $exception) {
+            error_log("getRegion Error {$const}\n" . $exception->getMessage());
+        }
+        return "";
     }
 
     /**
-     * @return array
+     * @return mixed[]
      */
     private static function getSettings(): array
     {
         $opt = \Post_Jsoner_Admin::getGlobalOption('post_jsoner_s3_settings', '[]');
         $out = json_decode($opt, 1);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            $out = [];
+            return [];
         }
+
         return $out;
     }
 
     /**
-     * @param $env
+     * @param string $env
      * @return string
      */
-    public static function getBucketValue($env): string
+    public static function getBucketValue(string $env): string
     {
         $settings = self::getSettings();
         $name = self::$prefix . strtolower($env) . '_bucket';
@@ -61,10 +73,10 @@ class Post_Jsoner_S3_Config
     }
 
     /**
-     * @param $env
+     * @param string $env
      * @return string
      */
-    public static function getPathValue($env): string
+    public static function getPathValue(string $env): string
     {
         $settings = self::getSettings();
         $name = self::$prefix . strtolower($env) . '_path';
@@ -83,6 +95,7 @@ class Post_Jsoner_S3_Config
         if (empty($env)) {
             $env = 'qa';
         }
+
         $name = self::$prefix . strtolower($env) . '_enabled';
         return  (empty($settings) || !array_key_exists($name, $settings))
             ? ''
@@ -90,10 +103,10 @@ class Post_Jsoner_S3_Config
     }
 
     /**
-     * @param $env
+     * @param string $env
      * @return array[]
      */
-    public static function getOptionSection($env): array
+    public static function getOptionSection(string $env): array
     {
         $_env = strtolower($env);
         return [

@@ -32,17 +32,20 @@ if (false === $isDefaultSite) {
                         <option label="<?php echo trim($site->path, '/'); ?>"
                                 value="<?php echo trim($site->path, '/'); ?>"
                                 data-id="<?php echo $site->blog_id; ?>"></option>
-                    <?php endforeach; ?>
+                    <?php endforeach;
+ ?>
                 </datalist>
-            <?php else: ?>
+<?php else: ?>
                 <input type="hidden" id="site-id" value="<?php echo $site->blog_id; ?>">
                 <input id="site" type="text" value="<?php echo trim($site->path, '/'); ?>"
                        data-id="<?php echo $site->blog_id; ?>" disabled/>
-            <?php endif; ?>
+            <?php endif;
+ ?>
             <button type="submit" class="btn">Export</button>
         </form>
     </section>
-<?php endif; ?>
+<?php endif;
+ ?>
 
 <?php if ($isDefaultSite): ?>
     <section id="export-bulk">
@@ -56,7 +59,8 @@ if (false === $isDefaultSite) {
             <button type="submit" class="btn">Full Export</button>
         </form>
     </section>
-<?php endif; ?>
+<?php endif;
+ ?>
 <div class="clearfix"></div>
 
 <p style="background-color: rgba(0,0,0,0.1); padding: 5px; font-style: italic;">

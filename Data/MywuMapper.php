@@ -8,10 +8,9 @@ class MywuMapper implements iMapper
 
     /**
      * @param object $post
-     * @param array  $template
-     * @param array  $customs
-     * @param int    $iteration
-     *
+     * @param array $template
+     * @param array $customs
+     * @param int $iteration
      * @return array
      */
     public function map(object $post, array $template, array $customs = [], int $iteration = 0): array
@@ -31,10 +30,12 @@ class MywuMapper implements iMapper
                     $result[$key] = $this->cleanupStr($result[$key]);
                 }
             }
+
             if ($this->hasImage($key) && is_string($result[$key])) {
                 $result[$key] = $this->remapImage($result[$key]);
             }
         }
+
         return $result;
     }
 
@@ -42,27 +43,32 @@ class MywuMapper implements iMapper
      * @param object $post
      * @param string $source
      * @param object $customs
-     *
      * @return string
      */
     public function getValue(object $post, string $source, object $customs): string
     {
         $parts = explode('.', $source) ?? [];
-        if (empty($parts) || (!in_array($parts[0], ['post', 'customs']))) {
+        if (empty($parts)) {
             return $source;
         }
+        if (!in_array($parts[0], ['post', 'customs'])) {
+            return $source;
+        }
+
         $countParts = count($parts);
 
         $output = (array)${$parts[0]} ?? [];
-        for ($index = 1; $index < $countParts; $index++) {
+        for ($index = 1; $index < $countParts; ++$index) {
             if (is_array($output)) {
                 if (!array_key_exists($parts[$index], $output)) {
                     $output = "";
                     break;
                 }
+
                 $output = $output[$parts[$index]];
             }
         }
+
         return is_array($output)
             ? (string)array_shift($output)
             : (string)$output;
@@ -70,9 +76,13 @@ class MywuMapper implements iMapper
 
     private function hasImage(string $key): bool
     {
-        return (strpos(strtolower($key), 'image') !== false);
+        return (str_contains(strtolower($key), 'image'));
     }
 
+    /**
+     * @param string $id
+     * @return string[]
+     */
     private function remapImage(string $id): array
     {
         $result = [
@@ -86,13 +96,13 @@ class MywuMapper implements iMapper
             $result['height'] = $image[1];
             $result['width'] = $image[2];
         }
+
         return $result;
     }
 
     /**
-     * @param int    $post_id
+     * @param int $post_id
      * @param string $postType
-     *
      * @return array
      */
     public function reformatCustoms(int $post_id, string $postType = 'post'): array
@@ -101,10 +111,11 @@ class MywuMapper implements iMapper
 
         $customFields = [];
         foreach ($customs as $key => $val) {
-            if (strpos($key, "_") !== 0 && !empty($val)) {
-                if (is_array($val) && count((array)$val) == 1) {
+            if (!str_starts_with($key, "_") && !empty($val)) {
+                if (is_array($val) && count($val) == 1) {
                     $val = array_shift($val);
                 }
+
                 $customFields[$key] = $val;
             }
         }
@@ -113,6 +124,7 @@ class MywuMapper implements iMapper
         if (array_key_exists("reward_details", $customFields)) {
             $ptype = $customFields['reward_details'];
         }
+
         $customFields['reward_details'] = [];
 
         foreach ($customFields as $key => $val) {
@@ -154,7 +166,7 @@ class MywuMapper implements iMapper
         if (array_key_exists("fulfillment_instructions", $customFields['reward_details'])) {
             $y = $customFields['reward_details']["fulfillment_instructions"];
             $customFields['reward_details']["fulfillment_instructions"] = [];
-            for ($x = 0; $x < $y; $x++) {
+            for ($x = 0; $x < $y; ++$x) {
                 $key = "fulfillment_instructions_" . $x . "_instruction_item";
                 if (array_key_exists($key, $customFields['reward_details'])) {
                     $customFields['reward_details']["fulfillment_instructions"][] = $customFields['reward_details'][$key];

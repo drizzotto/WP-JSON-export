@@ -31,6 +31,7 @@ class DefaultMapper implements iMapper
                 }
             }
         }
+
         return $result;
     }
 
@@ -38,27 +39,32 @@ class DefaultMapper implements iMapper
      * @param object $post
      * @param string $source
      * @param object $customs
-     *
      * @return string
      */
     public function getValue(object $post, string $source, object $customs): string
     {
         $parts = $this->$this->getParts($source);
-        if (empty($parts) || (!in_array($parts[0], ['post', 'customs']))) {
+        if (empty($parts)) {
             return $source;
         }
+        if (!in_array($parts[0], ['post', 'customs'])) {
+            return $source;
+        }
+
         $countParts = count($parts);
 
         $output = (array)${$parts[0]} ?? [];
-        for ($index = 1; $index < $countParts; $index++) {
+        for ($index = 1; $index < $countParts; ++$index) {
             if (is_array($output)) {
                 if (!array_key_exists($parts[$index], $output)) {
                     $output = "";
                     break;
                 }
+
                 $output = $output[$parts[$index]];
             }
         }
+
         return is_array($output)
             ? (string)array_shift($output)
             : (string)$output;
@@ -74,13 +80,15 @@ class DefaultMapper implements iMapper
         $customs = (array)get_post_custom($post_id);
         $customFields = [];
         foreach ($customs as $key => $val) {
-            if (strpos($key, "_") !== 0 && !empty($val)) {
-                if (is_array($val) && count((array)$val) == 1) {
+            if (!str_starts_with($key, "_") && !empty($val)) {
+                if (is_array($val) && count($val) == 1) {
                     $val = array_shift($val);
                 }
+
                 $customFields[$key] = $val;
             }
         }
+
         if (array_key_exists("image", $customFields)) {
             $image = wp_get_attachment_image_src($customFields['image'], 'full');
             $customFields['image'] = [

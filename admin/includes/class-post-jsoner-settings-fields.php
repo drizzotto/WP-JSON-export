@@ -4,7 +4,7 @@ use Posts_Jsoner\Data\MapperRegistry;
 
 class Post_Jsoner_Settings_Fields
 {
-    private $fields_def = [
+    private array $fields_def = [
         'post_jsoner_config_root' => [
             'title' => 'Config Root path',
             'args' => [
@@ -97,7 +97,11 @@ class Post_Jsoner_Settings_Fields
         return (strtoupper($env) === strtoupper(Post_Jsoner_Admin::getActiveSiteEnvironment()));
     }
 
-    public function getFields($exportTypes): array
+    /**
+     * @param array $exportTypes
+     * @return array
+     */
+    public function getFields(array $exportTypes): array
     {
         $result = [];
         $this->appendExportTypes($exportTypes);
@@ -105,10 +109,13 @@ class Post_Jsoner_Settings_Fields
             if (array_key_exists('is_s3', $definitions['args']) && (!$this->isS3Enabled())) {
                 $definitions['args']['disabled'] = 1;
             }
+
             add_settings_field(
                 $key,
                 $definitions['title'] ?? "",
-                [$this, 'post_jsoner_render_settings_field'],
+                function ($args) {
+                    return $this->post_jsoner_render_settings_field($args);
+                },
                 'post_jsoner_general_settings',
                 'post_jsoner_general_section',
                 $definitions['args']
@@ -119,7 +126,11 @@ class Post_Jsoner_Settings_Fields
         return $result;
     }
 
-    private function appendExportTypes($types): void
+    /**
+     * @param array $types
+     * @return void
+     */
+    private function appendExportTypes(array $types): void
     {
         if (!empty($types)) {
             foreach ($types as $type => $item) {
@@ -148,7 +159,11 @@ class Post_Jsoner_Settings_Fields
         }
     }
 
-    public function resgiterSettings(array $fields): void
+    /**
+     * @param array $fields
+     * @return void
+     */
+    public function registerSettings(array $fields): void
     {
         foreach ($fields as $field) {
             register_setting(
@@ -158,7 +173,11 @@ class Post_Jsoner_Settings_Fields
         }
     }
 
-    public function post_jsoner_render_settings_field($args)
+    /**
+     * @param array $args
+     * @return void
+     */
+    public function post_jsoner_render_settings_field(array $args): void
     {
         /* EXAMPLE INPUT
                             'type'      => 'input',
@@ -182,9 +201,9 @@ class Post_Jsoner_Settings_Fields
             }
         }
 
-        $tooltip = (!empty($args['tooltip']))
-            ? '<div class="help-tip"><p>' . $args['tooltip'] . '</p></div>'
-            : '';
+        $tooltip = (empty($args['tooltip']))
+            ? ''
+            : '<div class="help-tip"><p>' . $args['tooltip'] . '</p></div>';
 
         if (array_key_exists('type', $args)) {
             switch ($args['type']) {
@@ -211,41 +230,50 @@ class Post_Jsoner_Settings_Fields
     }
 
     /**
-     * @param $args
+     * @param array $args
      * @param string $tooltip
-     * @param $value
+     * @param mixed $value
      * @return void
      */
-    private function renderInput($args, string $tooltip, $value): void
+    private function renderInput(array $args, string $tooltip, mixed $value): void
     {
         $class = (isset($args['class'])) ? ' class="' . $args['class'] . '" ' : '';
         if ($args['subtype'] != 'checkbox') {
-            $prependStart = (isset($args['prepend_value'])) ? '<div class="input-prepend"> <span class="add-on">' . $args['prepend_value'] . '</span>' : '';
+            $prependStart = (isset($args['prepend_value'])) ? '<div class="input-prepend"> <span class="add-on">'
+                . $args['prepend_value'] . '</span>' : '';
             $prependEnd = (isset($args['prepend_value'])) ? $tooltip . '</div>' : $tooltip . '';
             $step = (isset($args['step'])) ? 'step="' . $args['step'] . '"' : '';
             $min = (isset($args['min'])) ? 'min="' . $args['min'] . '"' : '';
             $max = (isset($args['max'])) ? 'max="' . $args['max'] . '"' : '';
             if (isset($args['disabled'])) {
                 // hide the actual input bc if it was just a disabled input the info saved in the database would be wrong - bc it would pass empty values and wipe the actual information
-                echo $prependStart . '<input ' . $class . ' type="' . $args['subtype'] . '" id="' . $args['id'] . '_disabled" ' . $step . ' ' . $max . ' ' . $min . ' name="' . $args['name'] . '_disabled" size="40" disabled value="' . esc_attr($value) . '" /><input type="hidden" id="' . $args['id'] . '" ' . $step . ' ' . $max . ' ' . $min . ' name="' . $args['name'] . '" size="40" value="' . esc_attr($value) . '" />' . $prependEnd;
+                echo $prependStart . '<input ' . $class . ' type="' . $args['subtype'] . '" id="' . $args['id']
+                    . '_disabled" ' . $step . ' ' . $max . ' ' . $min . ' name="' . $args['name']
+                    . '_disabled" size="40" disabled value="' . esc_attr($value) . '" /><input type="hidden" id="'
+                    . $args['id'] . '" ' . $step . ' ' . $max . ' ' . $min . ' name="' . $args['name']
+                    . '" size="40" value="' . esc_attr($value) . '" />' . $prependEnd;
             } else {
-                echo $prependStart . '<input ' . $class . ' type="' . $args['subtype'] . '" id="' . $args['id'] . '" "' . $args['required'] . '" ' . $step . ' ' . $max . ' ' . $min . ' name="' . $args['name'] . '" size="40" value="' . esc_attr($value) . '" />' . $prependEnd;
+                echo $prependStart . '<input ' . $class . ' type="' . $args['subtype'] . '" id="' . $args['id'] . '" "'
+                        . $args['required'] . '" ' . $step . ' ' . $max . ' ' . $min . ' name="' . $args['name']
+                    . '" size="40" value="' . esc_attr($value) . '" />' . $prependEnd;
             }
         } else {
             $checked = ($value) ? 'checked' : '';
             echo empty($args['disabled'])
-                ? '<input ' . $class . ' type="' . $args['subtype'] . '" id="' . $args['id'] . '" "' . $args['required'] . '" name="' . $args['name'] . '" size="40" value="1" ' . $checked . '/>' . $tooltip
-                : '<input ' . $class . ' type="' . $args['subtype'] . '" id="' . $args['id'] . '" "' . $args['required'] . '" name="' . $args['name'] . '" size="40" value="1" ' . $checked . ' disabled/>' . $tooltip;
+                ? '<input ' . $class . ' type="' . $args['subtype'] . '" id="' . $args['id'] . '" "' . $args['required']
+                    . '" name="' . $args['name'] . '" size="40" value="1" ' . $checked . '/>' . $tooltip
+                : '<input ' . $class . ' type="' . $args['subtype'] . '" id="' . $args['id'] . '" "' . $args['required']
+                    . '" name="' . $args['name'] . '" size="40" value="1" ' . $checked . ' disabled/>' . $tooltip;
         }
     }
 
     /**
-     * @param $name
-     * @param $value
+     * @param string $name
+     * @param string $value
      * @param array $options
      * @return void
      */
-    private function renderSelect($name, $value, array $options): void
+    private function renderSelect(string $name, string $value, array $options): void
     {
         echo '<select name="' . $name . '" value="' . $value . '">';
         foreach ($options as $option) {
@@ -253,14 +281,20 @@ class Post_Jsoner_Settings_Fields
                 ? '<option value="' . $option . '" selected>' . ucfirst($option) . '</option>'
                 : '<option value="' . $option . '">' . ucfirst($option) . '</option>';
         }
+
         echo '</select>';
     }
 
-    private function renderGroup($args): void
+    /**
+     * @param array $args
+     * @return void
+     */
+    private function renderGroup(array $args): void
     {
         $this->fields_def['post_jsoner_s3_settings']['args']['value'] = get_option('post_jsoner_s3_settings', "{}");
         $fieldVal = json_decode($this->fields_def['post_jsoner_s3_settings']['args']['value'], 1);
-        echo '<input type="hidden" id="' . $args['id'] . '" name="' . $args['name'] . '" value="' . esc_attr($this->fields_def['post_jsoner_s3_settings']['args']['value']) . '" />';
+        echo '<input type="hidden" id="' . $args['id'] . '" name="' . $args['name'] . '" value="'
+            . esc_attr($this->fields_def['post_jsoner_s3_settings']['args']['value']) . '" />';
         echo '<div>';
         foreach ($args['sections'] as $key => $section) {
             $activeClass = $this->isS3Enabled($key) ? 'active-site' : '';
@@ -276,18 +310,24 @@ class Post_Jsoner_Settings_Fields
                 echo '</div>';
                 echo '</div>';
             }
+
             echo '</div>';
         }
+
         echo '</div>';
     }
 
-    private function renderCheckedText($args): void
+    /**
+     * @param array $args
+     * @return void
+     */
+    private function renderCheckedText(array $args): void
     {
         $this->fields_def[$args['id']]['args']['value'] = get_option($args['id'], "{}");
         $value = $this->fields_def[$args['id']]['args']['value'];
         $option = json_decode($value, 1);
 
-        $checked = (array_key_exists('enabled', $option) && (true === (bool)$option['enabled']))
+        $checked = (array_key_exists('enabled', $option) && ((bool)$option['enabled']))
             ? 'checked=checked'
             : '';
         $inputValue = (array_key_exists('value', $option))
@@ -295,13 +335,15 @@ class Post_Jsoner_Settings_Fields
             : $args['default'];
 
         echo '<div>';
-        echo '<input type="hidden" id="' . $args['id'] . '" name="' . $args['name'] . '" value="' . esc_attr($value) . '" />';
-        $args['id'] = $args['id'] . '_input';
-        $args['name'] = $args['name'] . '_input';
+        echo '<input type="hidden" id="' . $args['id'] . '" name="' . $args['name']
+            . '" value="' . esc_attr($value) . '" />';
+        $args['id'] .= '_input';
+        $args['name'] .= '_input';
         echo "<table><tr><td class='checked-text'>";
         $this->renderInput($args, '', $inputValue);
         echo "</td><td class='checked-text'>";
-        echo '<label for="' . $args['id'] . '_check">Enabled</label><input type="checkbox" ' . $checked . ' class="checked-text" id="' .
+        echo '<label for="' . $args['id'] . '_check">Enabled</label><input type="checkbox" '
+            . $checked . ' class="checked-text" id="' .
             $args['id'] . '_check" name="' . $args['id'] . '_check" style="margin: 5px !important;" />';
         echo "</td></tr></table>";
         echo '</div>';
