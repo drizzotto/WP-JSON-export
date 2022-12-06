@@ -13,8 +13,14 @@ class Jsoner
 
     private array $data;
 
+
+
     /**
      * Jsoner constructor.
+     *
+     * @param string $country
+     * @param string $language
+     * @param int $postId
      */
     public function __construct(private string $country, private string $language)
     {
@@ -27,6 +33,11 @@ class Jsoner
         }
     }
 
+    /**
+     * @param object $post
+     *
+     * @return bool
+     */
     public function updateNode(object $post): bool
     {
         try {
@@ -58,6 +69,11 @@ class Jsoner
         return true;
     }
 
+    /**
+     * @param string $type
+     *
+     * @return bool
+     */
     public function loadFromFile(string $type = 'posts'): bool
     {
         try {
@@ -80,10 +96,15 @@ class Jsoner
     }
 
     // lookup
+
     /**
      * Search a post/page based on single column search
      *
+     * @param array  $list
+     * @param string $needle
+     * @param string $column
      *
+     * @return int
      */
     public function findByColumn(array $list, string $needle, string $column): int
     {
@@ -93,6 +114,14 @@ class Jsoner
             : $key;
     }
 
+    // update
+
+    /**
+     * @param array  $data
+     * @param string $type
+     *
+     * @return bool
+     */
     public function saveToFile(array $data, string $type = 'posts'): bool
     {
         try {

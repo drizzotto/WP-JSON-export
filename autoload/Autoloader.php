@@ -17,6 +17,11 @@ class Autoloader
         });
     }
 
+    /**
+     * @param string $prefix
+     * @param string $base_dir
+     * @param bool   $prepend
+     */
     public function addNamespace(string $prefix, string $base_dir, bool $prepend = false): void
     {
         // normalize namespace prefix

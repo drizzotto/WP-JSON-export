@@ -8,6 +8,7 @@ class FileSystem
      * @param string $country
      * @param string $lang
      * @param string $type
+     *
      * @return array
      */
     public function loadFromJson(string $country, string $lang, string $type = 'posts'): array
@@ -26,6 +27,7 @@ class FileSystem
      * @param string $lang
      * @param array $data
      * @param string $type
+     *
      * @return bool
      */
     public function saveToJson(string $country, string $lang, array $data, string $type = 'post'): bool
@@ -44,6 +46,7 @@ class FileSystem
     /**
      * @param string $name
      * @param string $format
+     *
      * @return array
      */
     public static function loadConfig(string $name, string $format='json'): array
@@ -57,6 +60,7 @@ class FileSystem
      * @param string $country
      * @param string $lang
      * @param string $type
+     *
      * @return string
      * @throws \Exception
      */
@@ -93,6 +97,7 @@ class FileSystem
     /**
      * @param string $filename - the full path to the file
      * @param string $content
+     *
      * @return bool
      */
     private static function save(string $filename, string $content): bool

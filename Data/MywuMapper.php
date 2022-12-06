@@ -43,6 +43,7 @@ class MywuMapper implements iMapper
      * @param object $post
      * @param string $source
      * @param object $customs
+     *
      * @return string
      */
     public function getValue(object $post, string $source, object $customs): string
@@ -103,6 +104,7 @@ class MywuMapper implements iMapper
     /**
      * @param int $post_id
      * @param string $postType
+     *
      * @return array
      */
     public function reformatCustoms(int $post_id, string $postType = 'post'): array

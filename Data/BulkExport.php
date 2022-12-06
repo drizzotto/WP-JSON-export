@@ -96,6 +96,7 @@ class BulkExport
     /**
      * @param string $type
      * @param string $lang
+     *
      * @return array
      */
     private static function getPosts(string $type, string $lang = ''): array

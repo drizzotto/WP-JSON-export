@@ -25,6 +25,7 @@ class S3Wrapper
     /**
      * S3Wrapper constructor.
      *
+     * @param string $env
      * @throws \Exception
      */
     public function __construct(string $env = 'qa')
@@ -116,6 +117,7 @@ class S3Wrapper
      * @param string $country
      * @param string $lang
      * @param string $filename
+     *
      * @return string
      */
     public static function genFilename(string $country, string $lang, string $filename): string

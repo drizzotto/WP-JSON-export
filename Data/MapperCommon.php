@@ -5,6 +5,11 @@ use Posts_Jsoner\Storage\FileSystem;
 
 trait MapperCommon
 {
+    /**
+     * @param string $field
+     *
+     * @return bool
+     */
     public final function hasWildCard(string $field): bool
     {
         return strpos($field,'*') > 0;
@@ -14,6 +19,7 @@ trait MapperCommon
      * @param string $source
      * @param object $post
      * @param object $customs
+     *
      * @return array
      */
     public static function wildCardToArray(string $source, object $post, object $customs): array
