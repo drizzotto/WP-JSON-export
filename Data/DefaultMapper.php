@@ -55,7 +55,7 @@ class DefaultMapper implements iMapper
         $countParts = count($parts);
 
         $output = (array)${$parts[0]} ?? [];
-        for ($index = 1; $index < $countParts; ++$index) {
+        for ($index = 0; $index < $countParts; ++$index) {
             if (is_array($output)) {
                 if (!array_key_exists($parts[$index], $output)) {
                     $output = "";

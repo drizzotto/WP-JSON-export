@@ -101,37 +101,23 @@ class BulkExport
      */
     private static function getPosts(string $type, string $lang = ''): array
     {
+        global $wpdb;
+
         if (empty($lang)) {
             $lang = apply_filters( 'wpml_current_language', null );
         }
 
         $result = [];
-        $args = [
-            'post_type' => $type,
-            'suppress_filters' => false,
-            'posts_per_page' => -1,
-            'post_status' => ['publish', 'private'],
-        ];
-
-        $posts = get_posts($args);
-        $filteredPosts = $posts;
-
-        if (!empty($lang)) {
-            global $sitepress;
-            if (!empty($sitepress)) {
-                $filteredPosts = [];
-                foreach ($posts as $post) {
-                    $trpid = apply_filters('wpml_object_id', $post->ID, $type, true, $lang);
-                    $filteredPosts[] = get_post($trpid);
-                }
-
-                if (empty($filteredPosts)) {
-                    $filteredPosts = $posts;
-                }
+        wp_reset_query();
+        $post_ids = $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM $wpdb->posts WHERE post_type=%s AND post_status IN ('publish', 'private')", $type));
+        $post_ids = array_filter($post_ids, function($value) use ($lang) {
+            $language_details = apply_filters( 'wpml_post_language_details', null, $value );
+            if ($language_details['language_code']==$lang) {
+                return $value;
             }
-        }
+        },ARRAY_FILTER_USE_BOTH);
 
-        $posts = array_filter($filteredPosts);
+        $posts = array_map(fn($pid) => get_post($pid), $post_ids);
 
         if (!empty($posts)) {
             $sid = self::toggleDefaultSite();

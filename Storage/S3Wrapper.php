@@ -135,7 +135,6 @@ class S3Wrapper
         try {
             $env = \Post_Jsoner_Admin::getActiveSiteEnvironment();
             if (empty($env)) {
-                \error_log("checkConnection: \n".var_export($env,1)."\n",3,DEBUG_FILE);
                 $env = 'QA';
             }
 
