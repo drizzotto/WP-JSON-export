@@ -138,7 +138,7 @@ class BulkExport
     {
         $bid = ($siteId==1) ? get_current_blog_id() : $siteId;
         if (is_multisite()) {
-            switch_to_blog($bid);
+            switch_to_blog($siteId);
         }
         return $bid;
     }
