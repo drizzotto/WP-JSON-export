@@ -34,7 +34,7 @@ trait MapperCommon
      */
     public final function cleanupStr(string $str): string
     {
-        return preg_replace("/[^a-zA-Z0-9 \-_]/", "", $str);
+        return preg_replace("#[^a-zA-Z0-9 \-_]#", "", $str);
     }
 
     /**
@@ -56,9 +56,10 @@ trait MapperCommon
     {
         $name = $mapper . DIRECTORY_SEPARATOR . $postType;
         $pconfig = get_option('jsoner_config_root', JSONER_CONFIG_ROOT);
-        if (!file_exists( $pconfig . DIRECTORY_SEPARATOR . $name .".{$format}")) {
+        if (!file_exists( $pconfig . DIRECTORY_SEPARATOR . $name .sprintf('.%s', $format))) {
             $name = $mapper . DIRECTORY_SEPARATOR . "default";
         }
+
         return FileSystem::loadConfig($name, $format);
     }
 }

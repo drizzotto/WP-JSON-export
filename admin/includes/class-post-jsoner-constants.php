@@ -3,16 +3,7 @@
 
 class Post_Jsoner_Constants
 {
-    private string $plugin_name;
-    private string $plugin_version;
-
-    public function __construct(string $plugin_name, string $plugin_version)
-    {
-        $this->plugin_name = $plugin_name;
-        $this->plugin_version = $plugin_version;
-    }
-
-    public static function setConstants()
+    public static function setConstants(): void
     {
         $pdir = dirname(dirname(__DIR__));
         $jsoner_config_root = get_option('jsoner_config_root', $pdir . DIRECTORY_SEPARATOR . 'config');

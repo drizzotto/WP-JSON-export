@@ -6,11 +6,20 @@ use Posts_Jsoner\Data\BulkExport;
 
 class Administrator
 {
+    /**
+     * @var string
+     */
     const TITLE = "Posts JSONer Page";
+
+    /**
+     * @var string
+     */
     const SUB_TITLE = "Posts JSONer";
 
     private string $plugin_name = "post-jsoner";
+
     private string $version = "1.0.0";
+
     private object $loader;
 
     private object $plugin_admin;
@@ -24,7 +33,10 @@ class Administrator
         $this->registerEndpoints();
     }
 
-    private function load_dependencies()
+    /**
+     * @return void
+     */
+    private function load_dependencies(): void
     {
         /**
          * The class responsible for orchestrating the actions and filters of the
@@ -48,13 +60,19 @@ class Administrator
         $this->plugin_admin = new \Post_Jsoner_Admin( $this->get_plugin_name(), $this->get_version() );
     }
 
-    private function set_constants()
+    /**
+     * @return void
+     */
+    private function set_constants(): void
     {
         $plugin_constants = new \Post_Jsoner_Constants( $this->get_plugin_name(), $this->get_version() );
         $plugin_constants->setConstants();
     }
 
-    private function define_admin_hooks()
+    /**
+     * @return void
+     */
+    private function define_admin_hooks(): void
     {
         $this->loader->add_action( 'admin_enqueue_scripts', $this->plugin_admin, 'enqueue_styles' );
         $this->loader->add_action( 'admin_enqueue_scripts', $this->plugin_admin, 'enqueue_scripts' );
@@ -67,7 +85,7 @@ class Administrator
      * @since     1.0.0
      * @return    string    The name of the plugin.
      */
-    public function get_plugin_name() {
+    public function get_plugin_name(): string {
         return $this->plugin_name;
     }
 
@@ -77,7 +95,7 @@ class Administrator
      * @since     1.0.0
      * @return    string    The version number of the plugin.
      */
-    public function get_version() {
+    public function get_version(): string {
         return $this->version;
     }
 
@@ -86,20 +104,30 @@ class Administrator
      *
      * @since    1.0.0
      */
-    public function run() {
+    public function run(): void {
         $this->loader->run($this->plugin_admin);
     }
 
     // LEGACY
 
+    /**
+     * @return void
+     */
     public function registerEndpoints(): void
     {
         // Register endpoints to handle form submissions
-        add_action('wp_ajax_jsoner_bulk', [$this, 'jsonerBulkExport']);
-        add_action('wp_ajax_jsoner_site', [$this, 'jsonerSiteExport']);
+        add_action('wp_ajax_jsoner_bulk', function () {
+            return $this->jsonerBulkExport();
+        });
+        add_action('wp_ajax_jsoner_site', function () {
+            return $this->jsonerSiteExport();
+        });
     }
 
-    public function jsonerBulkExport()
+    /**
+     * @return void
+     */
+    public function jsonerBulkExport(): void
     {
         $offset = $_POST['offset'] ?? 0;
         $step = $_POST['step'] ?? 5;
@@ -137,27 +165,32 @@ class Administrator
                 if (empty($path)) {
                     $path = 'default';
                 }
+
                 if (($item->blog_id !==0) && ($item->public==0  || $path=='uk')) { // skip not public sites
                     continue;
                 }
+
                 if (!BulkExport::exportSite($path, $item->blog_id)) {
                     error_log("Site {$path} was not exporter\n",3, DEBUG_FILE);
                     $errors[] = $path;
                 }
-                $count++;
+
+                ++$count;
             }
+
             $response['processed'] = $count;
         } else {
             if (!BulkExport::exportSite('default', 0)) {
                 error_log("Site default was not exported\n",3, DEBUG_FILE);
                 $errors[] = 'default';
             }
+
             $response['processed'] = 1;
         }
 
         if (!empty($errors)) {
-            $errSites = join(' - ',$errors);
-            $this->responseError($response, "There was an error exporting the following sites: {$errSites}");
+            $errSites = implode(' - ',$errors);
+            $this->responseError($response, sprintf('There was an error exporting the following sites: %s', $errSites));
         }
 
         $response['success'] = true;
@@ -165,7 +198,10 @@ class Administrator
         $this->responseSuccess($response);
     }
 
-    public function jsonerSiteExport()
+    /**
+     * @return void
+     */
+    public function jsonerSiteExport(): void
     {
         $response = [
             'errors' => null,
@@ -175,13 +211,15 @@ class Administrator
         if (!is_admin()) {
             $this->responseError($response, "Admin user is required");
         }
+
         if (empty($_POST['site']) || empty($_POST['site_id'])) {
             $this->responseError($response, "You must select a site to be exported");
         }
+
         $path = $_POST['site'];
         $blogId = $_POST['site_id'];
         if (!BulkExport::exportSite($path, $blogId)) {
-            $this->responseError($response, "There was an error exporting {$path}");
+            $this->responseError($response, sprintf('There was an error exporting %s', $path));
         }
 
         $response['success'] = true;

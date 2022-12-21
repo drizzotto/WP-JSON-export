@@ -11,10 +11,15 @@ use Aws\Credentials\Credentials;
 class S3Wrapper
 {
     private S3Client $client;
+
     private string $bucket;
+
     private string $key;
+
     private string $secret;
+
     private string $region;
+
     private string $environment;
 
     /**
@@ -54,6 +59,7 @@ class S3Wrapper
     /**
      * @param string $filename
      * @param string $targetPath
+     * @return void
      */
     public function uploadFile(string $filename, string $targetPath): void
     {
@@ -65,37 +71,37 @@ class S3Wrapper
                 'Key' => $keySrc,
                 'SourceFile' => $filename,
             ];
-            error_log("FN: {$filename}\n",3,DEBUG_FILE);
-            error_log("TP: {$targetPath}\n",3,DEBUG_FILE);
+            error_log(sprintf('FN: %s%s', $filename, PHP_EOL),3,DEBUG_FILE);
+            error_log(sprintf('TP: %s%s', $targetPath, PHP_EOL),3,DEBUG_FILE);
             error_log("AR: ".var_export($args,1)."\n",3,DEBUG_FILE);
 
             $result = $this->client->putObject($args);
             error_log("S3Wrapper UploadFile result:" . var_export($result,1),3,DEBUG_FILE);
-        } catch (S3Exception $e) {
-            error_log($e->getMessage(),3,DEBUG_FILE);
+        } catch (S3Exception $s3Exception) {
+            error_log($s3Exception->getMessage(),3,DEBUG_FILE);
         }
     }
 
     /**
      * @param string $source
      * @param string $target
+     * @return void
      */
     public function uploadDirectory(string $source, string $target): void
     {
         try {
             $keySrc = \Post_Jsoner_S3_Config::getPathValue(strtolower($this->environment)) . $target;
             $this->client->uploadDirectory($source, $this->bucket, $keySrc);
-        } catch (\Exception $e) {
-            error_log("uploadDirectory: ". $e->getMessage(),3,DEBUG_FILE);
+        } catch (\Exception $exception) {
+            error_log("uploadDirectory: ". $exception->getMessage(),3,DEBUG_FILE);
         }
     }
 
     /**
      * @param string $filename
-     *
-     * @return string
+     * @return string|bool
      */
-    public function downloadFile(string $filename): string
+    public function downloadFile(string $filename): string|bool
     {
         $result = $this->client->getObject(
             [
@@ -120,7 +126,7 @@ class S3Wrapper
     }
 
     /**
-     * Checks if it can creates
+     * Checks if it can create
      *
      * @return bool
      */
@@ -129,16 +135,15 @@ class S3Wrapper
         try {
             $env = \Post_Jsoner_Admin::getActiveSiteEnvironment();
             if (empty($env)) {
-                \error_log("checkConnection: \n".var_export($env,1)."\n",3,DEBUG_FILE);
                 $env = 'QA';
             }
+
             $s3Client = new S3Wrapper($env);
             $buckets = $s3Client->client->listBuckets();
             unset($s3Client);
             return !empty($buckets);
-        }
-        catch(\Exception $e) {
-            error_log("S3Wrapper::checkConnection->".$e->getTraceAsString()."\n",3,DEBUG_FILE);
+        } catch(\Throwable $exception) {
+            error_log("S3Wrapper::checkConnection->".$exception->getMessage()."\n",3,DEBUG_FILE);
             unset($s3Client);
             return false;
         }

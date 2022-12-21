@@ -4,24 +4,6 @@ use Posts_Jsoner\Admin\Administrator;
 
 class Post_Jsoner_Admin
 {
-    /**
-     * The ID of this plugin.
-     *
-     * @since    1.0.0
-     * @access   private
-     * @var      string $plugin_name The ID of this plugin.
-     */
-    private string $plugin_name;
-
-    /**
-     * The version of this plugin.
-     *
-     * @since    1.0.0
-     * @access   private
-     * @var      string $version The current version of this plugin.
-     */
-    private string $version;
-
     private Post_Jsoner_Settings_Fields $settings_Fields;
 
     private array $exportTypes = [
@@ -46,12 +28,14 @@ class Post_Jsoner_Admin
      * @param string $version The version of this plugin.
      * @since    1.0.0
      */
-    public function __construct(string $plugin_name, string $version)
+    public function __construct(private string $plugin_name, private string $version)
     {
-        $this->plugin_name = $plugin_name;
-        $this->version = $version;
-        add_action('admin_menu', array($this, 'addPluginAdminMenu'), 9);
-        add_action('admin_init', array($this, 'registerAndBuildFields'));
+        add_action('admin_menu', function () {
+            return $this->addPluginAdminMenu();
+        }, 9);
+        add_action('admin_init', function () : void {
+            $this->registerAndBuildFields();
+        });
         $this->settings_Fields = new Post_Jsoner_Settings_Fields();
     }
 
@@ -75,6 +59,7 @@ class Post_Jsoner_Admin
         if (is_object($row)) {
             return $row->option_value;
         }
+
         return $default;
     }
 
@@ -83,7 +68,7 @@ class Post_Jsoner_Admin
      *
      * @since    1.0.0
      */
-    public function enqueue_styles()
+    public function enqueue_styles(): void
     {
         /**
          * This function is provided for demonstration purposes only.
@@ -104,7 +89,7 @@ class Post_Jsoner_Admin
      *
      * @since    1.0.0
      */
-    public function enqueue_scripts()
+    public function enqueue_scripts(): void
     {
         /**
          * This function is provided for demonstration purposes only.
@@ -121,40 +106,47 @@ class Post_Jsoner_Admin
         wp_enqueue_script($this->plugin_name, plugin_dir_url(dirname(__FILE__)) . 'assets/js/post-jsoner-admin.js', array('jquery'), $this->version, false);
     }
 
-    public function addPluginAdminMenu()
+    public function addPluginAdminMenu(): void
     {
         add_management_page(
             Administrator::TITLE,
             Administrator::SUB_TITLE,
             'administrator',
             $this->plugin_name,
-            array($this, 'displayPluginAdminDashboard')
+            function () {
+                return $this->displayPluginAdminDashboard();
+            }
         );
     }
 
-    public function displayPluginAdminDashboard()
+    public function displayPluginAdminDashboard(): void
     {
         require_once plugin_dir_path(dirname(__FILE__)) . 'views/page.php';
     }
 
-    public function displayPluginAdminSettings()
+    public function displayPluginAdminSettings(): void
     {
-        // set this var to be used in the settings-display view
-        isset($_GET['tab']) ? $_GET['tab'] : 'general';
+        if (isset($_GET['tab'])) {
+        }
+
         if (isset($_GET['error_message'])) {
-            add_action('admin_notices', array($this, 'postJsonerSettingsMessages'));
+            add_action('admin_notices', function ($error_message) {
+                return $this->postJsonerSettingsMessages($error_message);
+            });
             do_action('admin_notices', $_GET['error_message']);
         }
+
         require_once 'partials/' . $this->plugin_name . '-admin-settings-display.php';
     }
 
-    public function postJsonerSettingsMessages($error_message)
+    public function postJsonerSettingsMessages($error_message): void
     {
         if ($error_message === '1') {
             $message = __('There was an error adding this setting. Please try again.  If this persists, shoot us an email.', 'my-text-domain');
             $err_code = esc_attr('post_jsoner_example_setting');
             $setting_field = 'post_jsoner_example_setting';
         }
+
         $type = 'error';
         add_settings_error(
             $setting_field,
@@ -178,13 +170,15 @@ class Post_Jsoner_Admin
             // Title to be displayed on the administration page
             '',
             // Callback used to render the description of the section
-            array($this, 'post_jsoner_display_general_account'),
+            function () {
+                return $this->post_jsoner_display_general_account();
+            },
             // Page on which to add this section of options
             'post_jsoner_general_settings'
         );
 
         $fields = $this->settings_Fields->getFields($this->exportTypes);
-        $this->settings_Fields->resgiterSettings($fields);
+        $this->settings_Fields->registerSettings($fields);
     }
 
     public function loadTypes(): void
@@ -207,18 +201,22 @@ class Post_Jsoner_Admin
         $exclude = array_merge(['acf-field', 'acf-field-group'], $built_in);
         $types = array_keys($wp_post_types);
 
-        foreach ($types as $_key=>$type) {
-            if (!in_array($type, $this->exportTypes) && !in_array($type, $exclude)) {
-                $this->exportTypes[$type] = [
-                    'value' => $type,
-                    'enabled' => false
-                ];
+        foreach ($types as $type) {
+            if (in_array($type, $this->exportTypes)) {
+                continue;
             }
+            if (in_array($type, $exclude)) {
+                continue;
+            }
+            $this->exportTypes[$type] = [
+                'value' => $type,
+                'enabled' => false
+            ];
         }
 
     }
 
-    public function post_jsoner_display_general_account()
+    public function post_jsoner_display_general_account(): void
     {
         echo '<p>These settings apply to all Post JSONer functionality.<br><small><i>PHP constants have precedence over options</i></small></p>';
     }
@@ -239,6 +237,7 @@ class Post_Jsoner_Admin
                 'orderby' => 'path',
             ]);
         }
+
         return 1;
     }
 }
