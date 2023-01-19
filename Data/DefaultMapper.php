@@ -44,7 +44,7 @@ class DefaultMapper implements iMapper
      */
     public function getValue(object $post, string $source, object $customs): string
     {
-        $parts = $this->$this->getParts($source);
+        $parts = $this->getParts($source);
         if (empty($parts)) {
             return $source;
         }

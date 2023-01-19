@@ -76,6 +76,20 @@ class Post_Jsoner_Settings_Fields
                 'sections' => []
             ]
         ],
+        'post_jsoner_default_language' => [
+            'title' => 'Default Language',
+            'args' => [
+                'type' => 'input',
+                'subtype' => 'text',
+                'id' => 'post_jsoner_default_language',
+                'name' => 'post_jsoner_default_language',
+                'required' => 'false',
+                'get_options_list' => '',
+                'value' => 'en',
+                'value_type' => 'normal',
+                'wp_data' => 'option'
+            ]
+        ],
     ];
 
     public function __construct()

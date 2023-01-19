@@ -48,7 +48,8 @@ class MywuMapper implements iMapper
      */
     public function getValue(object $post, string $source, object $customs): string
     {
-        $parts = explode('.', $source) ?? [];
+        $found = false;
+        $parts = $this->getParts($source);
         if (empty($parts)) {
             return $source;
         }
@@ -59,20 +60,19 @@ class MywuMapper implements iMapper
         $countParts = count($parts);
 
         $output = (array)${$parts[0]} ?? [];
-        for ($index = 0; $index < $countParts; ++$index) {
-            if (is_array($output)) {
-                if (!array_key_exists($parts[$index], $output)) {
-                    $output = "";
-                    break;
-                }
-
+        for ($index = 1; $index < $countParts; ++$index) {
+            if (is_array($output) && array_key_exists($parts[$index], $output)) {
+                $found = true;
                 $output = $output[$parts[$index]];
             }
         }
 
-        return is_array($output)
-            ? (string)array_shift($output)
-            : (string)$output;
+        if ($found) {
+            return is_array($output)
+                ? (string)array_shift($output)
+                : (string)$output;
+        }
+        return "";
     }
 
     private function hasImage(string $key): bool
@@ -109,8 +109,7 @@ class MywuMapper implements iMapper
      */
     public function reformatCustoms(int $post_id, string $postType = 'post'): array
     {
-        $customs = (array)@get_post_custom($post_id);
-
+        $customs = (array)get_post_custom($post_id);
         $customFields = [];
         foreach ($customs as $key => $val) {
             if (!str_starts_with($key, "_") && !empty($val)) {
@@ -145,24 +144,20 @@ class MywuMapper implements iMapper
 
         if (array_key_exists("image", $customFields)) {
             $image = wp_get_attachment_image_src($customFields['image'], 'full');
-            if (!empty($image)) {
-                $customFields['image'] = [
-                    "href" => $image[0],
-                    "height" => $image[1],
-                    "width" => $image[2]
-                ];
-            }
+            $customFields['image'] = [
+                "href" => $image[0] ?? '',
+                "height" => $image[1] ?? '',
+                "width" => $image[2] ?? ''
+            ];
         }
 
         if (array_key_exists("brand_logo", $customFields)) {
             $image = wp_get_attachment_image_src($customFields['brand_logo'], 'full');
-            if (!empty($image)) {
-                $customFields['logo'] = [
-                    "href" => $image[0],
-                    "height" => $image[1],
-                    "width" => $image[2]
-                ];
-            }
+            $customFields['logo'] = [
+                "href" => $image[0] ?? '',
+                "height" => $image[1] ?? '',
+                "width" => $image[2] ?? ''
+            ];
         }
 
         if (array_key_exists("fulfillment_instructions", $customFields['reward_details'])) {
@@ -204,4 +199,5 @@ class MywuMapper implements iMapper
 
         return $customFields;
     }
+
 }

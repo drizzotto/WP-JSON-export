@@ -35,8 +35,7 @@ class FileSystem
         try {
             $filename = $this->getOrCreateFilename($country, $lang, $type);
             $out = $this->save($filename, json_encode($data));
-        } catch (\Exception $exception) {
-            error_log($exception->getMessage(),3,DEBUG_FILE);
+        } catch (\Throwable $exception) {
             $out = false;
         }
 

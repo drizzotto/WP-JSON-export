@@ -112,7 +112,7 @@ class BulkExport
         $post_ids = $wpdb->get_col( $wpdb->prepare( "SELECT ID FROM $wpdb->posts WHERE post_type=%s AND post_status IN ('publish', 'private')", $type));
         $post_ids = array_filter($post_ids, function($value) use ($lang) {
             $language_details = apply_filters( 'wpml_post_language_details', null, $value );
-            if ($language_details['language_code']==$lang) {
+            if (("default" === $lang) || ($language_details['language_code']==$lang)) {
                 return $value;
             }
         },ARRAY_FILTER_USE_BOTH);
@@ -213,12 +213,15 @@ class BulkExport
             $opt = $prefix.$post_type->name;
             $obj = \Post_Jsoner_Admin::getGlobalOption($opt);
             $type = json_decode($obj,1);
-
+            $currentLang = $_lang;
             if (!empty($type) && (true === $type['enabled'])) {
                 $elements = self::getPosts($post_type->name, $_lang);
                 if (!empty($elements)) {
                     $value = $type['value'] ?? $post_type->name;
-                    $filesystem->saveToJson($siteName, $_lang, $elements, $value);
+                    if ($_lang == "default") {
+                        $currentLang = \Post_Jsoner_Admin::getGlobalOption($prefix . "default_language", "en");
+                    }
+                    $filesystem->saveToJson($siteName, $currentLang, $elements, $value);
                 }
             }
         }
