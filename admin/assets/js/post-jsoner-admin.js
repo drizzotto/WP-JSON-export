@@ -1,8 +1,25 @@
-"use strict";
+//"use strict";
 
 jQuery(document).ready(function ($) {
     let toastContainer = document.querySelector('.toast-container');
     accordion();
+
+    //date picker
+    const datePicker = $('input[name="datefilter"]');
+    console.log("datePicker",datePicker);
+    $(datePicker).daterangepicker({
+        autoUpdateInput: false,
+    });
+
+    $(datePicker).on('apply.daterangepicker', function(ev, picker) {
+        $(this).val(picker.startDate.format('MM/DD/YYYY') + ' - ' + picker.endDate.format('MM/DD/YYYY'));
+    });
+
+    $(datePicker).on('cancel.daterangepicker', function(ev, picker) {
+        $(this).val('');
+    });
+
+
     $(".checked-text input[type=text],.checked-text input[type=checkbox]").on('change', function (evt) {
         let value = $(this).closest('div').children('input[type=hidden]').val();
         let valueObj = ((typeof value === "undefined") || (value === "")) ? {} : JSON.parse(value);
@@ -134,6 +151,55 @@ jQuery(document).ready(function ($) {
         callBulkExport(event);
     });
 
+    function validateFilters() {
+        const site = $('#site').val();
+        const site_id = $('#site-id').val();
+        return (!(site_id === "" || site === ""));
+    }
+
+    function toggleFilters() {
+        if (!validateFilters()) {
+            $('#author').prop('disabled', true);
+            $('#status').prop('disabled', true);
+            $('#category').prop('disabled', true);
+            $('#datefilter').prop('disabled', true);
+            $('#btn-export-site').prop('disabled', true);
+        } else {
+            $('#author').prop('disabled', false);
+            $('#status').prop('disabled', false);
+            $('#category').prop('disabled', false);
+            $('#datefilter').prop('disabled', false);
+            $('#btn-export-site').prop('disabled', false);
+        }
+    }
+
+    $(document).on('change', '#site', function (event) {
+       toggleFilters();
+    });
+
+    $(document).on('focusout', '#site', function (event) {
+        toggleFilters();
+    });
+
+    $(document).on('blur', '#site', function (event) {
+        toggleFilters();
+    });
+
+    function getFilterData() {
+        return {
+            action: 'jsoner_site',
+            page: 'post_jsoner',
+            site: $('#site').val(),
+            site_id: $('#site-id').val(),
+            author: $('#author').val(),
+            author_id: $('#author-id').val(),
+            status: $('#status').val(),
+            category: $('#category').val(),
+            category_id: $('#category-id').val(),
+            datefilter: $('#datefilter').val()
+        }
+    }
+
     $(document).on('submit', '#jsoner-site-export-form', function (event) {
         event.preventDefault(); // Prevent the default form submit.
         event.stopPropagation();
@@ -142,12 +208,7 @@ jQuery(document).ready(function ($) {
             url: ajaxurl,
             type: 'POST',
             async: true,
-            data: {
-                action: 'jsoner_site',
-                page: 'post_jsoner',
-                site: $('#site').val(),
-                site_id: $('#site-id').val()
-            },
+            data: getFilterData(),
             dataType: "json"
         })
             .done(function (response) {

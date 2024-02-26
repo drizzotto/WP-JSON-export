@@ -161,6 +161,9 @@ class Administrator
             $sites = get_sites($args);
             $count = 0;
             foreach ($sites as $item) {
+                if (is_archived( $item->blog_id)) {
+                    continue;
+                }
                 $path = trim($item->path, '/');
                 if (empty($path)) {
                     $path = 'default';
@@ -200,6 +203,7 @@ class Administrator
 
     /**
      * @return void
+     * @throws \Exception
      */
     public function jsonerSiteExport(): void
     {
@@ -218,8 +222,14 @@ class Administrator
 
         $path = $_POST['site'];
         $blogId = $_POST['site_id'];
-        if (!BulkExport::exportSite($path, $blogId)) {
-            $this->responseError($response, sprintf('There was an error exporting %s', $path));
+        $author = $_POST['author'] ?? "";
+        $status = $_POST['status'] ?? "";
+        $category = $_POST['category'] ?? "";
+        $dateRange = $_POST['datefilter'] ?? "";
+        if (!is_archived( $blogId)) {
+            if (!BulkExport::exportSite($path, $blogId, $author, $status, $category, $dateRange)) {
+                $this->responseError($response, sprintf('There was an error exporting %s', $path));
+            }
         }
 
         $response['success'] = true;
