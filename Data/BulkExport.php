@@ -194,7 +194,7 @@ class BulkExport
         try {
             $query_args = [];
             $lang = empty($lang) ? apply_filters('wpml_current_language', null) : $lang;
-            $table = $table_prefix . $blogId .'_posts';//($type == "page") ? $wpdb->posts :
+            $table = ($type == "page") ? $wpdb->posts : $table_prefix . $blogId . '_posts';
             $query = "SELECT ID FROM $table WHERE post_type=%s AND post_status NOT IN ('archived')";
             $query_args[] = $type;
             if ($type != "page") {
@@ -202,12 +202,7 @@ class BulkExport
                     $query_args[] = $author;
                     $query .= " AND post_author=%s";
                 }
-                if (!empty($status)) {
-                    $query_args[] = $status;
-                    $query .= " AND post_status=%s";
-                } else {
-                    $query .= " AND post_status IN ('publish', 'private')";
-                }
+
                 if (!empty($category)) {
                     $query_args[] = $category;
                     $query .= " AND post_category=%s";
@@ -220,9 +215,15 @@ class BulkExport
                     $query .= " AND post_modified BETWEEN %s AND %s";
                 }
             }
+            if (!empty($status)) {
+                $query_args[] = $status;
+                $query .= " AND post_status=%s";
+            } else {
+                $query .= " AND post_status IN ('publish', 'private')";
+            }
             $post_ids = $wpdb->get_col($wpdb->prepare($query, ...$query_args));
 
-//            error_log("\n216\n".sprintf($query, ...$query_args)."\n\n", 3, DEBUG_FILE);
+            error_log("\n216\n".sprintf($query, ...$query_args)."\n\n", 3, DEBUG_FILE);
 //            error_log("\n217\n".var_export($post_ids, 1)."\n\n", 3, DEBUG_FILE);
 
             $post_ids = array_filter($post_ids, function ($value) use ($lang) {

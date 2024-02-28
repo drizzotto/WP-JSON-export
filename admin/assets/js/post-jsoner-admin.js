@@ -19,6 +19,10 @@ jQuery(document).ready(function ($) {
         $(this).val('');
     });
 
+    $(document).load(function () {
+        toggleFilters();
+    });
+
 
     $(".checked-text input[type=text],.checked-text input[type=checkbox]").on('change', function (evt) {
         let value = $(this).closest('div').children('input[type=hidden]').val();
@@ -154,10 +158,12 @@ jQuery(document).ready(function ($) {
     function validateFilters() {
         const site = $('#site').val();
         const site_id = $('#site-id').val();
+        console.log('validateFilters',site,site_id);
         return (!(site_id === "" || site === ""));
     }
 
     function toggleFilters() {
+        console.log('validateFilters',validateFilters())
         if (!validateFilters()) {
             $('#author').prop('disabled', true);
             $('#status').prop('disabled', true);

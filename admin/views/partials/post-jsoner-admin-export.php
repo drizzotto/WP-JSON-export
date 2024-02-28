@@ -1,26 +1,39 @@
 <?php
 !defined('ABSPATH') && exit;
-
-$isDefaultSite = (get_current_blog_id() === 1);
+$blog_id = get_current_blog_id();
+$isDefaultSite = ($blog_id === 1);
 
 $sites = $this->getSites();
 $categories = $this->getCategories();
 
 $authors = get_users([ 'role__in' => [ 'editor', 'author' ]]);
 $statuses = get_post_stati();
-
-//echo "<pre>";
-//var_dump($categories);
+$defaultStatuses = [
+    'publish',
+    'private',
+    'draft',
+    'trash',
+    'auto-draft',
+    'future',
+    'pending',
+];
+foreach ($statuses as $key => $status) {
+    if (!in_array($status, $defaultStatuses)) {
+        unset($statuses[$key]);
+    }
+}
 
 if (false === $isDefaultSite) {
     foreach ($sites as $site) {
-        if ($site->blog_id == get_current_blog_id()) {
+        if ($site->blog_id == $blog_id) {
             $sites = [];
             $sites[] = $site;
             break;
         }
     }
 }
+
+
 ?>
 <?php if (is_array($sites)): //multisite ?>
     <section id="export-site">
