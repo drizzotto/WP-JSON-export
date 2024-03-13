@@ -33,6 +33,7 @@ class BulkExport
         $langs = self::getLangs($blogId);
         $categoryOpt = get_option('categories', '{"value":"categories","enabled":false}');
         $categoryType = json_decode($categoryOpt, true);
+        \error_log("\n".var_export($langs,1)."\n", 3, DEBUG_FILE);
         foreach ($langs as $lang) {
             $_lang = $lang['code'] ?? '';
 
@@ -88,7 +89,7 @@ class BulkExport
         global $sitepress;
         if (!empty($sitepress)) {
             switch_to_blog($blogId);
-            $result = @$sitepress->get_active_languages(1);
+            $result = $sitepress->get_active_languages(true);
         } else {
             $result = [];
         }
@@ -191,11 +192,16 @@ class BulkExport
         global $wpdb;
         global $table_prefix;
 
+        // extra check
+        $blogId = ($blogId == 0) ? 1 : $blogId;
         try {
             $query_args = [];
             $lang = empty($lang) ? apply_filters('wpml_current_language', null) : $lang;
-            $table = ($type == "page") ? $wpdb->posts : $table_prefix . $blogId . '_posts';
-            $query = "SELECT ID FROM $table WHERE post_type=%s AND post_status NOT IN ('archived')";
+            $current = get_current_blog_id();
+            self::toggleDefaultSite($blogId);
+//            $table = ($type == "page") ? $wpdb->posts : $table_prefix . $blogId . '_posts';
+            $query = "SELECT ID FROM $wpdb->posts WHERE post_type=%s AND post_status NOT IN ('archived')";
+            self::toggleDefaultSite($current);
             $query_args[] = $type;
             if ($type != "page") {
                 if (!empty($author)) {
@@ -223,7 +229,7 @@ class BulkExport
             }
             $post_ids = $wpdb->get_col($wpdb->prepare($query, ...$query_args));
 
-            error_log("\n216\n".sprintf($query, ...$query_args)."\n\n", 3, DEBUG_FILE);
+            error_log("\n231\n".sprintf($query, ...$query_args)."\n\n", 3, DEBUG_FILE);
 //            error_log("\n217\n".var_export($post_ids, 1)."\n\n", 3, DEBUG_FILE);
 
             $post_ids = array_filter($post_ids, function ($value) use ($lang) {

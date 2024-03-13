@@ -2,6 +2,7 @@
 
 namespace Posts_Jsoner\admin;
 
+use Post_Jsoner_Admin;
 use Posts_Jsoner\Data\BulkExport;
 
 class Administrator
@@ -151,14 +152,7 @@ class Administrator
 
         $errors = [];
         if (is_multisite()) {
-            $args = [
-                'public' => 1,
-                'path__not_in' => ['uk'],
-                'orderby' => 'path',
-                'number' => $step,
-                'offset' => $offset,
-            ];
-            $sites = get_sites($args);
+            $sites = Post_Jsoner_Admin::getSites();
             $count = 0;
             foreach ($sites as $item) {
                 if (is_archived( $item->blog_id)) {

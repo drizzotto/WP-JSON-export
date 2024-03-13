@@ -3,7 +3,7 @@
 $blog_id = get_current_blog_id();
 $isDefaultSite = ($blog_id === 1);
 
-$sites = $this->getSites();
+$sites = Post_Jsoner_Admin::getSites();
 $categories = $this->getCategories();
 
 $authors = get_users([ 'role__in' => [ 'editor', 'author' ]]);

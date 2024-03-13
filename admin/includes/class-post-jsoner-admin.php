@@ -178,11 +178,11 @@ class Post_Jsoner_Admin
 
     public function getCountSites(): int
     {
-        $sites = (array)$this->getSites();
+        $sites = (array)Post_Jsoner_Admin::getSites();
         return count($sites) ?? 0;
     }
 
-    public function getSites()
+    public static function getSites()
     {
         if (function_exists('get_sites')) {
             return get_sites(['public' => 1, 'archived' => 0, 'path__not_in' => ['/', 'uk'], 'orderby' => 'path',]);
@@ -198,7 +198,7 @@ class Post_Jsoner_Admin
         $categories = [];
         if (is_multisite()) {
             // All sites
-            $sites = $this->getSites();
+            $sites = Post_Jsoner_Admin::getSites();
             // Current Site
             $current = get_current_site();
 

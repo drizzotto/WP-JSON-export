@@ -6,9 +6,11 @@ jQuery(document).ready(function ($) {
 
     //date picker
     const datePicker = $('input[name="datefilter"]');
-    console.log("datePicker",datePicker);
+    toggleFilters();
+
     $(datePicker).daterangepicker({
         autoUpdateInput: false,
+        "showDropdowns": true,
     });
 
     $(datePicker).on('apply.daterangepicker', function(ev, picker) {
@@ -18,11 +20,6 @@ jQuery(document).ready(function ($) {
     $(datePicker).on('cancel.daterangepicker', function(ev, picker) {
         $(this).val('');
     });
-
-    $(document).load(function () {
-        toggleFilters();
-    });
-
 
     $(".checked-text input[type=text],.checked-text input[type=checkbox]").on('change', function (evt) {
         let value = $(this).closest('div').children('input[type=hidden]').val();
@@ -93,7 +90,7 @@ jQuery(document).ready(function ($) {
             dataType: "json"
         })
             .done(function (response) {
-                toggleWait();
+                // toggleWait();
                 if (response['success']) {
                     let next = response['next'];
                     $('#offset').val(next);
@@ -125,7 +122,7 @@ jQuery(document).ready(function ($) {
                 }
             })
             .fail(function (response) {
-                toggleWait();
+                // toggleWait();
                 $('#offset').val(-1);
                 generateToast({
                     toastContainer: toastContainer,
@@ -136,7 +133,7 @@ jQuery(document).ready(function ($) {
                 });
             })
             .always(function (response) {
-                toggleWait();
+                // toggleWait();
                 if (response['next'] === -1) {
                     $('#offset').val(0);
                 }
@@ -151,8 +148,9 @@ jQuery(document).ready(function ($) {
     $(document).on('submit', '#jsoner-bulk-export-form', function (event) {
         event.preventDefault(); // Prevent the default form submit.
         event.stopPropagation();
-        $("wait").show();
+        toggleWait();
         callBulkExport(event);
+        toggleWait();
     });
 
     function validateFilters() {
