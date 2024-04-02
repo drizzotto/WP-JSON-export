@@ -19,10 +19,10 @@ class Post_Jsoner_Admin
     {
         add_action('admin_menu', function () {
             return $this->addPluginAdminMenu();
-        }, 9);
+        }, 9998);
         add_action('admin_init', function (): void {
             $this->registerAndBuildFields();
-        });
+        },9999);
         $this->settings_Fields = new Post_Jsoner_Settings_Fields();
     }
 
@@ -185,7 +185,7 @@ class Post_Jsoner_Admin
     public static function getSites()
     {
         if (function_exists('get_sites')) {
-            return get_sites(['public' => 1, 'archived' => 0, 'path__not_in' => ['/', 'uk'], 'orderby' => 'path',]);
+            return get_sites(['public' => 1, 'archived' => 0, 'path__not_in' => ['uk'], 'orderby' => 'path',]);
         }
 
         return 1;

@@ -33,7 +33,7 @@ class BulkExport
         $langs = self::getLangs($blogId);
         $categoryOpt = get_option('categories', '{"value":"categories","enabled":false}');
         $categoryType = json_decode($categoryOpt, true);
-        \error_log("\n".var_export($langs,1)."\n", 3, DEBUG_FILE);
+
         foreach ($langs as $lang) {
             $_lang = $lang['code'] ?? '';
 
@@ -86,12 +86,10 @@ class BulkExport
      */
     private static function getLangs(int $blogId): array
     {
-        global $sitepress;
-        if (!empty($sitepress)) {
+        $result = [];
+        if (is_plugin_active("sitepress-multilingual-cms/sitepress.php")) {
             switch_to_blog($blogId);
-            $result = $sitepress->get_active_languages(true);
-        } else {
-            $result = [];
+            $result = self::getActiveLanguages();
         }
         return empty($result) ? ['default' => ['code' => 'default']] : $result;
     }
@@ -190,7 +188,6 @@ class BulkExport
     private static function getPosts(string $type, string $lang = '', int $blogId = 1,  string $author = "", string $status = "", string $category = "", string $dateRange = ""): array
     {
         global $wpdb;
-        global $table_prefix;
 
         // extra check
         $blogId = ($blogId == 0) ? 1 : $blogId;
@@ -199,43 +196,24 @@ class BulkExport
             $lang = empty($lang) ? apply_filters('wpml_current_language', null) : $lang;
             $current = get_current_blog_id();
             self::toggleDefaultSite($blogId);
-//            $table = ($type == "page") ? $wpdb->posts : $table_prefix . $blogId . '_posts';
-            $query = "SELECT ID FROM $wpdb->posts WHERE post_type=%s AND post_status NOT IN ('archived')";
+            list($query, $query_args) = self::buildQuery($type, $query_args, $author, $category, $dateRange, $status);
             self::toggleDefaultSite($current);
-            $query_args[] = $type;
-            if ($type != "page") {
-                if (!empty($author)) {
-                    $query_args[] = $author;
-                    $query .= " AND post_author=%s";
-                }
-
-                if (!empty($category)) {
-                    $query_args[] = $category;
-                    $query .= " AND post_category=%s";
-                }
-
-                if (!empty($dateRange)) {
-                    $_dateRange = explode(' - ', $dateRange);
-                    $query_args[] = date('Y-m-d H:i:s', strtotime(trim($_dateRange[0]) . ' 00:00:00'));
-                    $query_args[] = date('Y-m-d H:i:s', strtotime(trim($_dateRange[1]) . ' 23:59:59'));
-                    $query .= " AND post_modified BETWEEN %s AND %s";
-                }
-            }
-            if (!empty($status)) {
-                $query_args[] = $status;
-                $query .= " AND post_status=%s";
-            } else {
-                $query .= " AND post_status IN ('publish', 'private')";
-            }
             $post_ids = $wpdb->get_col($wpdb->prepare($query, ...$query_args));
+            if (is_plugin_active('sitepress-multilingual-cms/sitepress.php')) {
+                $post_ids = array_filter($post_ids, function ($value) use ($lang, $type) {
+                    global $wpdb;
+                    $query = "SELECT language_code 
+                    FROM {$wpdb->prefix}icl_translations
+                    WHERE element_id=%d
+                    AND element_type=%s
+                    LIMIT 1";
 
-            error_log("\n231\n".sprintf($query, ...$query_args)."\n\n", 3, DEBUG_FILE);
-//            error_log("\n217\n".var_export($post_ids, 1)."\n\n", 3, DEBUG_FILE);
+                    $language_for_element_prepared = $wpdb->prepare($query, [$value, "post_" . $type]);
+                    $language = $wpdb->get_var($language_for_element_prepared);
 
-            $post_ids = array_filter($post_ids, function ($value) use ($lang) {
-                $language_details = apply_filters('wpml_post_language_details', null, $value);
-                return ("default" === $lang) || ($language_details['language_code'] === $lang);
-            });
+                    return ("default" === $lang) || ($language === $lang);
+                });
+            }
             $current = get_current_blog_id();
             self::toggleDefaultSite($blogId);
             $posts = array_map(fn($pid) => get_post($pid), $post_ids);
@@ -244,10 +222,10 @@ class BulkExport
                 return [];
             }
 
-            $sid = self::toggleDefaultSite();
+            switch_to_blog(1);
             $mapperName = get_option('post_jsoner_mapper', 'default');
-            self::toggleDefaultSite($sid);
-            $mapper = MapperFactory::getMapper($mapperName);
+            switch_to_blog($blogId);
+            $mapper = \Posts_Jsoner\Data\MapperFactory::getMapper($mapperName);
             $template = $mapper->getTemplate($type, $mapperName);
             $result = array_map(function ($post) use ($mapper, $template) {
                 $normalizedCustom = $mapper->reformatCustoms($post->ID);
@@ -273,5 +251,83 @@ class BulkExport
             switch_to_blog($siteId);
         }
         return $bid;
+    }
+
+    /**
+     * @param string $type
+     * @param array $query_args
+     * @param string $author
+     * @param string $category
+     * @param string $dateRange
+     * @param string $status
+     * @return array
+     */
+    private static function buildQuery(string $type, array $query_args, string $author, string $category, string $dateRange, string $status): array
+    {
+        global $wpdb;
+        $query = "SELECT ID FROM $wpdb->posts WHERE post_type=%s AND post_status NOT IN ('archived')";
+        $query_args[] = $type;
+        if ($type != "page") {
+            if (!empty($author)) {
+                $query_args[] = $author;
+                $query .= " AND post_author=%s";
+            }
+
+            if (!empty($category)) {
+                $query_args[] = $category;
+                $query .= " AND post_category=%s";
+            }
+
+            if (!empty($dateRange)) {
+                $_dateRange = explode(' - ', $dateRange);
+                $query_args[] = date('Y-m-d H:i:s', strtotime(trim($_dateRange[0]) . ' 00:00:00'));
+                $query_args[] = date('Y-m-d H:i:s', strtotime(trim($_dateRange[1]) . ' 23:59:59'));
+                $query .= " AND post_modified BETWEEN %s AND %s";
+            }
+        }
+        if (!empty($status)) {
+            $query_args[] = $status;
+            $query .= " AND post_status=%s";
+        } else {
+            $query .= " AND post_status IN ('publish', 'private')";
+        }
+        return  [$query, $query_args];
+    }
+
+    /**
+     * @return array|object|\stdClass[]|null
+     */
+    private static function getActiveLanguages()
+    {
+        global $wpdb;
+        $res_query
+            = "
+            SELECT
+              l.code,
+              l.id,
+              english_name,
+              nt.name AS native_name,
+              major,
+              active,
+              default_locale,
+              encode_url,
+              tag,
+              lt.name AS display_name
+			FROM {$wpdb->prefix}icl_languages l
+			JOIN {$wpdb->prefix}icl_languages_translations nt
+			  ON ( nt.language_code = l.code AND nt.display_language_code = l.code )
+            LEFT OUTER JOIN {$wpdb->prefix}icl_languages_translations lt ON l.code=lt.language_code
+			WHERE l.active = 1 AND 
+			  ( lt.display_language_code = %s
+			  OR (lt.display_language_code = 'en'
+			    AND NOT EXISTS ( SELECT *
+			          FROM {$wpdb->prefix}icl_languages_translations ls
+			          WHERE ls.language_code = l.code
+			            AND ls.display_language_code = %s ) ) )
+            GROUP BY l.code, lt.name";
+
+        $res_query_prepared = $wpdb->prepare( $res_query, 'en', 'en' );
+        $res                = $wpdb->get_results( $res_query_prepared, ARRAY_A );
+        return $res;
     }
 }

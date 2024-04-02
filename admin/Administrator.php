@@ -113,6 +113,7 @@ class Administrator
 
     /**
      * @return void
+     * @throws \Exception
      */
     public function registerEndpoints(): void
     {
@@ -127,6 +128,7 @@ class Administrator
 
     /**
      * @return void
+     * @throws \Exception
      */
     public function jsonerBulkExport(): void
     {
@@ -177,7 +179,7 @@ class Administrator
 
             $response['processed'] = $count;
         } else {
-            if (!BulkExport::exportSite('default', 0)) {
+            if (!BulkExport::exportSite('default', 1)) {
                 error_log("Site default was not exported\n",3, DEBUG_FILE);
                 $errors[] = 'default';
             }
