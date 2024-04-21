@@ -35,7 +35,7 @@ foreach (glob(dirname(__FILE__) . '/autoload/*.php') as $file)
 
 if (!defined('DEBUG_FILE'))
 {
-    define('DEBUG_FILE', '/var/log/wp-error.log');
+    define('DEBUG_FILE', '/tmp/wp-error.log');
 }
 
 use Posts_Jsoner\admin\Administrator;

@@ -2,6 +2,7 @@
 
 namespace Posts_Jsoner\admin;
 
+use Post_Jsoner_Admin;
 use Posts_Jsoner\Data\BulkExport;
 
 class Administrator
@@ -112,6 +113,7 @@ class Administrator
 
     /**
      * @return void
+     * @throws \Exception
      */
     public function registerEndpoints(): void
     {
@@ -126,6 +128,7 @@ class Administrator
 
     /**
      * @return void
+     * @throws \Exception
      */
     public function jsonerBulkExport(): void
     {
@@ -151,16 +154,12 @@ class Administrator
 
         $errors = [];
         if (is_multisite()) {
-            $args = [
-                'public' => 1,
-                'path__not_in' => ['uk'],
-                'orderby' => 'path',
-                'number' => $step,
-                'offset' => $offset,
-            ];
-            $sites = get_sites($args);
+            $sites = Post_Jsoner_Admin::getSites();
             $count = 0;
             foreach ($sites as $item) {
+                if (is_archived( $item->blog_id)) {
+                    continue;
+                }
                 $path = trim($item->path, '/');
                 if (empty($path)) {
                     $path = 'default';
@@ -180,7 +179,7 @@ class Administrator
 
             $response['processed'] = $count;
         } else {
-            if (!BulkExport::exportSite('default', 0)) {
+            if (!BulkExport::exportSite('default', 1)) {
                 error_log("Site default was not exported\n",3, DEBUG_FILE);
                 $errors[] = 'default';
             }
@@ -200,6 +199,7 @@ class Administrator
 
     /**
      * @return void
+     * @throws \Exception
      */
     public function jsonerSiteExport(): void
     {
@@ -218,8 +218,14 @@ class Administrator
 
         $path = $_POST['site'];
         $blogId = $_POST['site_id'];
-        if (!BulkExport::exportSite($path, $blogId)) {
-            $this->responseError($response, sprintf('There was an error exporting %s', $path));
+        $author = $_POST['author'] ?? "";
+        $status = $_POST['status'] ?? "";
+        $category = $_POST['category'] ?? "";
+        $dateRange = $_POST['datefilter'] ?? "";
+        if (!is_archived( $blogId)) {
+            if (!BulkExport::exportSite($path, $blogId, $author, $status, $category, $dateRange)) {
+                $this->responseError($response, sprintf('There was an error exporting %s', $path));
+            }
         }
 
         $response['success'] = true;

@@ -6,20 +6,7 @@ class Post_Jsoner_Admin
 {
     private Post_Jsoner_Settings_Fields $settings_Fields;
 
-    private array $exportTypes = [
-        'post' => [
-            'value' => 'post',
-            'enabled' => true
-        ],
-        'page' => [
-            'value' => 'page',
-            'enabled' => true
-        ],
-        'categories' => [
-            'value' => 'categories',
-            'enabled' => true
-        ]
-    ];
+    private array $exportTypes = ['post' => ['value' => 'post', 'enabled' => true], 'page' => ['value' => 'page', 'enabled' => true], 'categories' => ['value' => 'categories', 'enabled' => true]];
 
     /**
      * Initialize the class and set its properties.
@@ -32,11 +19,67 @@ class Post_Jsoner_Admin
     {
         add_action('admin_menu', function () {
             return $this->addPluginAdminMenu();
-        }, 9);
-        add_action('admin_init', function () : void {
+        }, 9998);
+        add_action('admin_init', function (): void {
             $this->registerAndBuildFields();
-        });
+        },9999);
         $this->settings_Fields = new Post_Jsoner_Settings_Fields();
+    }
+
+    public function addPluginAdminMenu(): void
+    {
+        add_management_page(Administrator::TITLE, Administrator::SUB_TITLE, 'administrator', $this->plugin_name, function () {
+            return $this->displayPluginAdminDashboard();
+        });
+    }
+
+    public function displayPluginAdminDashboard(): void
+    {
+        require_once plugin_dir_path(dirname(__FILE__)) . 'views/page.php';
+    }
+
+    public function registerAndBuildFields(): void
+    {
+        $this->loadTypes();
+        /**
+         * First, we add_settings_section. This is necessary since all future settings must belong to one.
+         * Second, add_settings_field
+         * Third, register_setting
+         */
+        add_settings_section(// ID used to identify this section and with which to register options
+            'post_jsoner_general_section', // Title to be displayed on the administration page
+            '', // Callback used to render the description of the section
+            function () {
+                return $this->post_jsoner_display_general_account();
+            }, // Page on which to add this section of options
+            'post_jsoner_general_settings');
+
+        $fields = $this->settings_Fields->getFields($this->exportTypes);
+        $this->settings_Fields->registerSettings($fields);
+    }
+
+    public function loadTypes(): void
+    {
+        global $wp_post_types;
+        $built_in = ['attachment', 'revision', 'nav_menu_item', 'custom_css', 'customize_changeset', 'oembed_cache', 'user_request', 'wp_block', 'wp_navigation', 'wp_global_styles', 'wp_template_part', 'wp_template',];
+        $exclude = array_merge(['acf-field', 'acf-field-group'], $built_in);
+        $types = array_keys($wp_post_types);
+
+        foreach ($types as $type) {
+            if (in_array($type, $this->exportTypes)) {
+                continue;
+            }
+            if (in_array($type, $exclude)) {
+                continue;
+            }
+            $this->exportTypes[$type] = ['value' => $type, 'enabled' => false];
+        }
+
+    }
+
+    public function post_jsoner_display_general_account(): void
+    {
+        echo '<p>These settings apply to all Post JSONer functionality.<br><small><i>PHP constants have precedence over options</i></small></p>';
     }
 
     public static function getActiveSiteEnvironment(): string
@@ -48,9 +91,7 @@ class Post_Jsoner_Admin
     {
         global $wpdb;
         global $table_prefix;
-        $prefix = (is_multisite())
-            ? str_replace(get_current_blog_id() . '_', '', $table_prefix)
-            : $table_prefix;
+        $prefix = (is_multisite()) ? str_replace(get_current_blog_id() . '_', '', $table_prefix) : $table_prefix;
 
 
         $table = $prefix . 'options';
@@ -104,24 +145,8 @@ class Post_Jsoner_Admin
          */
 
         wp_enqueue_script($this->plugin_name, plugin_dir_url(dirname(__FILE__)) . 'assets/js/post-jsoner-admin.js', array('jquery'), $this->version, false);
-    }
-
-    public function addPluginAdminMenu(): void
-    {
-        add_management_page(
-            Administrator::TITLE,
-            Administrator::SUB_TITLE,
-            'administrator',
-            $this->plugin_name,
-            function () {
-                return $this->displayPluginAdminDashboard();
-            }
-        );
-    }
-
-    public function displayPluginAdminDashboard(): void
-    {
-        require_once plugin_dir_path(dirname(__FILE__)) . 'views/page.php';
+        wp_enqueue_script("moment", plugin_dir_url(dirname(__FILE__)) . 'assets/js/moment.min.js', array('jquery'), $this->version, false);
+        wp_enqueue_script("daterangepicker", plugin_dir_url(dirname(__FILE__)) . 'assets/js/daterangepicker.min.js', array('jquery', 'jquery-ui-core', 'moment' ), $this->version, false);
     }
 
     public function displayPluginAdminSettings(): void
@@ -148,96 +173,46 @@ class Post_Jsoner_Admin
         }
 
         $type = 'error';
-        add_settings_error(
-            $setting_field,
-            $err_code,
-            $message,
-            $type
-        );
-    }
-
-    public function registerAndBuildFields(): void
-    {
-        $this->loadTypes();
-        /**
-         * First, we add_settings_section. This is necessary since all future settings must belong to one.
-         * Second, add_settings_field
-         * Third, register_setting
-         */
-        add_settings_section(
-        // ID used to identify this section and with which to register options
-            'post_jsoner_general_section',
-            // Title to be displayed on the administration page
-            '',
-            // Callback used to render the description of the section
-            function () {
-                return $this->post_jsoner_display_general_account();
-            },
-            // Page on which to add this section of options
-            'post_jsoner_general_settings'
-        );
-
-        $fields = $this->settings_Fields->getFields($this->exportTypes);
-        $this->settings_Fields->registerSettings($fields);
-    }
-
-    public function loadTypes(): void
-    {
-        global $wp_post_types;
-        $built_in = [
-            'attachment',
-            'revision',
-            'nav_menu_item',
-            'custom_css',
-            'customize_changeset',
-            'oembed_cache',
-            'user_request',
-            'wp_block',
-            'wp_navigation',
-            'wp_global_styles',
-            'wp_template_part',
-            'wp_template',
-        ];
-        $exclude = array_merge(['acf-field', 'acf-field-group'], $built_in);
-        $types = array_keys($wp_post_types);
-
-        foreach ($types as $type) {
-            if (in_array($type, $this->exportTypes)) {
-                continue;
-            }
-            if (in_array($type, $exclude)) {
-                continue;
-            }
-            $this->exportTypes[$type] = [
-                'value' => $type,
-                'enabled' => false
-            ];
-        }
-
-    }
-
-    public function post_jsoner_display_general_account(): void
-    {
-        echo '<p>These settings apply to all Post JSONer functionality.<br><small><i>PHP constants have precedence over options</i></small></p>';
+        add_settings_error($setting_field, $err_code, $message, $type);
     }
 
     public function getCountSites(): int
     {
-        $sites = (array)$this->getSites();
+        $sites = (array)Post_Jsoner_Admin::getSites();
         return count($sites) ?? 0;
     }
 
-    public function getSites()
+    public static function getSites()
     {
         if (function_exists('get_sites')) {
-            return get_sites([
-                'public' => 1,
-                'archived' => 0,
-                'path__not_in' => ['/', 'uk'],
-                'orderby' => 'path',
-            ]);
+            return get_sites(['public' => 1, 'archived' => 0, 'path__not_in' => ['uk'], 'orderby' => 'path',]);
         }
 
         return 1;
+    }
+
+    public function getCategories(): array
+    {
+        // get_categories args
+        $args = array('hide_empty' => true);
+        $categories = [];
+        if (is_multisite()) {
+            // All sites
+            $sites = Post_Jsoner_Admin::getSites();
+            // Current Site
+            $current = get_current_site();
+
+            foreach ($sites as $blog) {
+                // switch to the blog
+                switch_to_blog($blog->blog_id);
+
+                $categories = get_categories($args);
+            }
+            // return to the current site
+            switch_to_blog($current->id);
+        } else {
+            $categories = get_categories($args);
+        }
+        return $categories;
     }
 }
